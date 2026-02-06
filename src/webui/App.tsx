@@ -25,6 +25,7 @@ import { PaneResize } from "./PaneResize";
 import { githubLight, githubDark, Theme, Colors, githubHighlightStyle } from './GithubTheme'
 import { AsmErrState, continueStep, DebugState, ErrorState, fetchTestcases, getCurrentLine, IdleState, initialRegs, nextStep, quitDebug, RunningState, runNormal, runTestSuite, setWasmRuntime, singleStep, startStep, startStepTestSuite, StoppedState, testData, TestSuiteState, TestSuiteTableEntry, TEXT_BASE, wasmInterface, wasmRuntime, wasmTestsuite, wasmTestsuiteIdx } from "./EmulatorState";
 import { highlightTree } from "@lezer/highlight";
+import { displayFormat, setDisplayFormat, DisplayFormat, unitSize, setUnitSize, UnitSize } from "./DisplayFormat";
 
 let parserWithMetadata = parser.configure({
 	props: [highlighting]
@@ -270,6 +271,26 @@ const Navbar: Component = () => {
 						<div class="cursor-pointer flex-shrink-0 mx-auto"></div></>
 					}
 					</Show>
+					<select 
+						class="font-semibold theme-fg theme-bg px-2 py-1 mx-1 focus:outline-none cursor-pointer"
+						title="Memory unit size"
+						value={unitSize()}
+						onChange={(e) => setUnitSize(e.currentTarget.value as UnitSize)}
+					>
+						<option value="byte">byte</option>
+						<option value="half">half</option>
+						<option value="word">word</option>
+					</select>
+					<select 
+						class="font-semibold theme-fg theme-bg px-2 py-1 mx-1 focus:outline-none cursor-pointer"
+						title="Number format"
+						value={displayFormat()}
+						onChange={(e) => setDisplayFormat(e.currentTarget.value as DisplayFormat)}
+					>
+						<option value="hex">hex</option>
+						<option value="unsigned">unsigned</option>
+						<option value="signed">signed</option>
+					</select>
 					<button
 						on:click={doChangeTheme}
 						class="cursor-pointer flex-0-shrink flex material-symbols-outlined theme-fg theme-bg-hover theme-bg-active"
