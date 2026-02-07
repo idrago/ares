@@ -149,10 +149,10 @@ function updateCss(colors: Colors): void {
 }
 
 declare global {
-  interface Window {
-    urlParams: URLSearchParams;
-	testsuiteName: string;
-  }
+	interface Window {
+		urlParams: URLSearchParams;
+		testsuiteName: string;
+	}
 }
 export const testsuiteName = window.testsuiteName;
 const localStorageKey = window.testsuiteName ? ("savedtext-" + window.testsuiteName) : "savedtext";
@@ -271,7 +271,7 @@ const Navbar: Component = () => {
 						<div class="cursor-pointer flex-shrink-0 mx-auto"></div></>
 					}
 					</Show>
-					<select 
+					<select
 						class="font-semibold theme-fg theme-bg px-2 py-1 mx-1 focus:outline-none cursor-pointer"
 						title="Memory unit size"
 						value={unitSize()}
@@ -281,7 +281,7 @@ const Navbar: Component = () => {
 						<option value="half">half</option>
 						<option value="word">word</option>
 					</select>
-					<select 
+					<select
 						class="font-semibold theme-fg theme-bg px-2 py-1 mx-1 focus:outline-none cursor-pointer"
 						title="Number format"
 						value={displayFormat()}
@@ -646,15 +646,15 @@ const App: Component = () => {
 
 					{() => <PaneResize firstSize={0.75} direction="vertical" second={true}>
 						{() => <PaneResize firstSize={0.55} direction="horizontal" second={true}>
-							{() => <RegisterTable pc={(wasmRuntime.status == "idle" || wasmRuntime.status == "asmerr" || wasmRuntime.status == "testsuite") ? TEXT_BASE : wasmRuntime.pc}
-								regs={(wasmRuntime.status == "idle" || wasmRuntime.status == "asmerr" || wasmRuntime.status == "testsuite") ? initialRegs : wasmRuntime.regs}
-								regWritten={wasmInterface.regWritten ? wasmInterface.regWritten[0] : 0} />}
 							{() => <MemoryView version={() => wasmRuntime.version}
 								writeAddr={wasmInterface.memWrittenAddr ? wasmInterface.memWrittenAddr[0] : 0}
 								writeLen={wasmInterface.memWrittenLen ? wasmInterface.memWrittenLen[0] : 0}
 								sp={wasmInterface.regsArr ? wasmInterface.regsArr[2 - 1] : 0}
 								load={wasmInterface.emu_load}
 							/>}
+							{() => <RegisterTable pc={(wasmRuntime.status == "idle" || wasmRuntime.status == "asmerr" || wasmRuntime.status == "testsuite") ? TEXT_BASE : wasmRuntime.pc}
+								regs={(wasmRuntime.status == "idle" || wasmRuntime.status == "asmerr" || wasmRuntime.status == "testsuite") ? initialRegs : wasmRuntime.regs}
+								regWritten={wasmInterface.regWritten ? wasmInterface.regWritten[0] : 0} />}
 						</PaneResize>}
 						{() => (<div
 							innerText={consoleText(wasmRuntime) ? consoleText(wasmRuntime) : "Console output will go here..."}
