@@ -127,12 +127,12 @@ export const MemoryView: Component<{ version: () => any, writeAddr: number, writ
                         <For each={rowVirtualizer2.getVirtualItems()}>
                             {(virtRow) => (
                                 <div
-                                    style={{ position: "absolute", top: `${virtRow.start}px`, height: `${ROW_HEIGHT}px` }}
+                                    style={{ "white-space": "nowrap", position: "absolute", top: `${virtRow.start}px`, height: `${ROW_HEIGHT}px` }}
                                     class="flex flex-row items-center w-full"
                                 >
                                     {/* Address Column */}
                                     <div
-                                        class={"theme-fg2 shrink-0 w-[10ch] mr-[2ch] tabular-nums " + ((addrSelect() == virtRow.index) ? "select-text" : "select-none")}
+                                        class={"theme-fg2 shrink-0 w-[10ch] tabular-nums " + ((addrSelect() == virtRow.index) ? "select-text" : "select-none")}
                                         onMouseDown={(e) => { setAddrSelect(virtRow.index); e.stopPropagation(); }}>
                                         {(getStartAddr() + virtRow.index * (chunksPerLine() - 1) * 4).toString(16).padStart(8, "0")}
                                     </div>
@@ -160,7 +160,7 @@ export const MemoryView: Component<{ version: () => any, writeAddr: number, writ
                                 >
                                     {/* Address Column */}
                                     <div
-                                        class={"theme-fg2 shrink-0 w-[10ch] mr-[2ch] tabular-nums " + ((addrSelect() == virtRow.index) ? "select-text" : "select-none")}
+                                        class={"theme-fg2 shrink-0 w-[10ch] tabular-nums " + ((addrSelect() == virtRow.index) ? "select-text" : "select-none")}
                                         onMouseDown={(e) => { setAddrSelect(virtRow.index); e.stopPropagation(); }}>
                                         {(getStartAddr() + virtRow.index * (chunksPerLine() - 1) * 4).toString(16).padStart(8, "0")}
                                     </div>
