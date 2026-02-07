@@ -302,6 +302,7 @@ export class WasmInterface {
 
   reverseStep(): void {
     if (this.numOfExecutedInstructions <= 0) return;
+    this.textBuffer = "";
     const targetInstructions = this.numOfExecutedInstructions - 1;
     this.executeNInstructions(targetInstructions);
   }
