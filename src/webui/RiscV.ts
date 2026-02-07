@@ -36,7 +36,6 @@ export class WasmInterface {
   private loadedPromise?: Promise<void>;
   private originalMemory?: Uint8Array;
   private currRunMemory?: Uint8Array;
-  public textBuffer: string = "";
   public successfulExecution: boolean;
   public regsArr?: Uint32Array;
   public memWrittenLen?: Uint32Array;
@@ -47,14 +46,13 @@ export class WasmInterface {
   public textByLinenumLen?: Uint32Array;
   public runtimeErrorParams?: Uint32Array;
   public runtimeErrorType?: Uint32Array;
-  public hasError: boolean = false;
-  public instructions: number;
   public shadowStackPtr?: Uint32Array;
   public shadowStack?: Uint32Array;
   public shadowStackLen?: Uint32Array;
   public callsanWrittenBy?: Uint8Array;
 
-  // Track executed instructions for reverse-step functionality
+  public textBuffer: string = "";
+  public hasError: boolean = false;
   public numOfExecutedInstructions: number = 0; // Total number of instructions executed
 
   public emu_load: (addr: number, size: number) => number;
@@ -108,10 +106,9 @@ export class WasmInterface {
     }
 
     this.successfulExecution = false;
-    this.instructions = 0;
-    this.hasError = false;
     this.textBuffer = "";
-
+    this.hasError = false;
+    this.numOfExecutedInstructions = 0;
     this.createU8(0).set(this.originalMemory);
 
     const encoder = new TextEncoder();
@@ -222,9 +219,8 @@ export class WasmInterface {
   }
   run(): void {
     this.exports.emulate();
-    this.instructions++;
     this.numOfExecutedInstructions++;
-    if (this.instructions > INSTRUCTION_LIMIT) {
+    if (this.numOfExecutedInstructions > INSTRUCTION_LIMIT) {
       this.textBuffer += `ERROR: instruction limit ${INSTRUCTION_LIMIT} reached\n`;
       this.hasError = true;
     } else if (this.runtimeErrorType[0] != 0) {
@@ -292,7 +288,6 @@ export class WasmInterface {
     this.resetToInitialState();
     for (let i = 0; i < n; i++) {
       this.exports.emulate();
-      this.instructions++;
       this.numOfExecutedInstructions++;
       if (this.runtimeErrorType[0] != 0 || this.hasError || this.successfulExecution) {
         break;
@@ -309,9 +304,9 @@ export class WasmInterface {
 
   resetToInitialState(): void {
     this.successfulExecution = false;
-    this.instructions = 0;
+    this.textBuffer = "";
     this.hasError = false;
-    this.createU8(0).set(this.currRunMemory);
     this.numOfExecutedInstructions = 0;
+    this.createU8(0).set(this.currRunMemory);
   }
 }
