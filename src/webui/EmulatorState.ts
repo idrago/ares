@@ -54,6 +54,8 @@ export type DebugState = {
 	pc: number;
 	regs: number[];
 	shadowStack: ShadowEntry[];
+	memWrittenAddr: number | null;
+	memWrittenLen: number | null;
 	version: number;
 };
 
@@ -171,7 +173,9 @@ function updateReactiveState(setRuntime) {
 			pc: wasmInterface.pc?.[0] ?? 0,
 			regs: [...wasmInterface.regsArr?.slice(0, 31) ?? initialRegs],
 			shadowStack: buildShadowStack(),
-			version: globalVersion++
+			version: globalVersion++,
+			memWrittenAddr: wasmInterface.memWrittenAddr[0],
+			memWrittenLen: wasmInterface.memWrittenLen[0],
 		});
 	}
 }
@@ -292,7 +296,6 @@ export async function startStep(_runtime: RuntimeState, setRuntime): Promise<voi
 		forceLinting(view);
 		return;
 	}
-	console.log("hereS");
 
 	setRuntime({
 		status: "debug",
@@ -394,6 +397,26 @@ export function quitDebug(_runtime: DebugState, setRuntime): void {
 	setRuntime({ status: "idle", version: globalVersion++ });
 }
 
+export function reverseStep(_runtime: DebugState, setRuntime): void {
+	if (wasmInterface.numOfExecutedInstructions > 0) {
+		// i want to use the current memWrittenAddr and len
+		// so it shows the reverse diff
+		const oldAddr = wasmInterface.memWrittenAddr[0];
+		const oldLen = wasmInterface.memWrittenLen[0];
+		wasmInterface.reverseStep();
+		setRuntime({
+			status: "debug",
+			consoleText: wasmInterface.textBuffer,
+			pc: wasmInterface.pc?.[0] ?? 0,
+			regs: [...wasmInterface.regsArr?.slice(0, 31) ?? initialRegs],
+			shadowStack: buildShadowStack(),
+			version: globalVersion++,
+			memWrittenAddr: oldAddr,
+			memWrittenLen: oldLen,
+		});
+	}
+}
+
 // in accordance to CodeMirror, 0 = invalid line (PC out of the file)
 export function getCurrentLine(_runtime: DebugState | ErrorState): number {
 	let linenoIdx = (_runtime.pc - TEXT_BASE) / 4;
@@ -432,9 +455,9 @@ export function shadowStackAugmented(shadowStack: ShadowEntry[], load, writeAddr
 }
 
 declare global {
-  interface Window {
-	earlyFetches: { asm: Promise<Response>, json: Promise<Response>, assignment: Promise<Response> }
-  }
+	interface Window {
+		earlyFetches: { asm: Promise<Response>, json: Promise<Response>, assignment: Promise<Response> }
+	}
 }
 
 export async function fetchTestcases() {
@@ -451,7 +474,7 @@ export async function fetchTestcases() {
 		alert("Can't load testcase files")
 	}
 	let testcases = await response2.json();
-	
+
 	const response3 = await window.earlyFetches.assignment;
 	if (!response3.ok) {
 		alert("Can't load testcase files")

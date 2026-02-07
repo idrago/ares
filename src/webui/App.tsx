@@ -23,7 +23,7 @@ import { RegisterTable } from "./RegisterTable";
 import { MemoryView } from "./MemoryView";
 import { PaneResize } from "./PaneResize";
 import { githubLight, githubDark, Theme, Colors, githubHighlightStyle } from './GithubTheme'
-import { AsmErrState, continueStep, DebugState, ErrorState, fetchTestcases, getCurrentLine, IdleState, initialRegs, nextStep, quitDebug, RunningState, runNormal, runTestSuite, setWasmRuntime, singleStep, startStep, startStepTestSuite, StoppedState, testData, TestSuiteState, TestSuiteTableEntry, TEXT_BASE, wasmInterface, wasmRuntime, wasmTestsuite, wasmTestsuiteIdx } from "./EmulatorState";
+import { AsmErrState, continueStep, DebugState, ErrorState, fetchTestcases, getCurrentLine, IdleState, initialRegs, nextStep, quitDebug, reverseStep, RunningState, runNormal, runTestSuite, setWasmRuntime, singleStep, startStep, startStepTestSuite, StoppedState, testData, TestSuiteState, TestSuiteTableEntry, TEXT_BASE, wasmInterface, wasmRuntime, wasmTestsuite, wasmTestsuiteIdx } from "./EmulatorState";
 import { highlightTree } from "@lezer/highlight";
 import { displayFormat, setDisplayFormat, DisplayFormat, unitSize, setUnitSize, UnitSize } from "./DisplayFormat";
 
@@ -209,6 +209,10 @@ window.addEventListener('keydown', (event) => {
 		event.preventDefault();
 		continueStep(wasmRuntime, setWasmRuntime);
 	}
+	else if (wasmRuntime.status == "debug" && prefix && event.key.toUpperCase() == 'Z') {
+		event.preventDefault();
+		reverseStep(wasmRuntime, setWasmRuntime);
+	}
 	else if (wasmRuntime.status == "debug" && prefix && event.key.toUpperCase() == 'X') {
 		event.preventDefault();
 		quitDebug(wasmRuntime, setWasmRuntime);
@@ -260,6 +264,13 @@ const Navbar: Component = () => {
 							title={`Continue (${prefixStr}-C)`}
 						>
 							resume
+						</button>
+						<button
+							on:click={() => reverseStep(debugRuntime(), setWasmRuntime)}
+							class="cursor-pointer flex-0-shrink flex material-symbols-outlined theme-fg theme-bg-hover theme-bg-active"
+							title={`Reverse step (${prefixStr}-Z)`}
+						>
+							undo
 						</button>
 						<button
 							on:click={() => quitDebug(debugRuntime(), setWasmRuntime)}
@@ -647,8 +658,8 @@ const App: Component = () => {
 					{() => <PaneResize firstSize={0.75} direction="vertical" second={true}>
 						{() => <PaneResize firstSize={0.55} direction="horizontal" second={true}>
 							{() => <MemoryView version={() => wasmRuntime.version}
-								writeAddr={wasmInterface.memWrittenAddr ? wasmInterface.memWrittenAddr[0] : 0}
-								writeLen={wasmInterface.memWrittenLen ? wasmInterface.memWrittenLen[0] : 0}
+								writeAddr={wasmRuntime.status == "debug" ? wasmRuntime.memWrittenAddr : 0}
+								writeLen={wasmRuntime.status == "debug" ? wasmRuntime.memWrittenLen : 0}
 								sp={wasmInterface.regsArr ? wasmInterface.regsArr[2 - 1] : 0}
 								pc={wasmRuntime.status == "debug" ? wasmInterface.pc[0] : 0}
 								load={wasmInterface.emu_load}

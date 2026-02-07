@@ -16,8 +16,7 @@ ARES_ARRAY(LabelData) g_labels = ARES_ARRAY_NEW(LabelData);
 ARES_ARRAY(Global) g_globals = ARES_ARRAY_NEW(Global);
 export ARES_ARRAY(u32) g_text_by_linenum;
 
-static ARES_ARRAY(DeferredInsn)
-    g_deferred_insn = ARES_ARRAY_NEW(DeferredInsn);
+static ARES_ARRAY(DeferredInsn) g_deferred_insn = ARES_ARRAY_NEW(DeferredInsn);
 
 static Section *g_section;
 
@@ -315,7 +314,7 @@ bool parse_quoted_str(Parser *p, char **out_str, size_t *out_len) {
         ARES_ARRAY_FREE(&buf);
         return false;
     }
-    
+
     while (true) {
         char c = peek(p);
         if (c == 0) {
@@ -386,7 +385,7 @@ int parse_csr(Parser *p) {
     size_t len;
     parse_ident(p, &str, &len);
 
-    for (int i = 0; i < sizeof(CSR_NAMES)/sizeof(CSR_NAMES[0]); i++) {
+    for (int i = 0; i < sizeof(CSR_NAMES) / sizeof(CSR_NAMES[0]); i++) {
         if (CSR_NAMES[i] && str_eq_case(str, len, CSR_NAMES[i])) return i;
     }
 
@@ -416,8 +415,7 @@ void asm_emit(u32 inst, int linenum) {
 static Extern *get_extern(const char *sym, size_t sym_len) {
     for (size_t i = 0; i < ARES_ARRAY_LEN(&g_externs); i++) {
         if (ARES_ARRAY_GET(&g_externs, i)->len == sym_len &&
-            0 ==
-                memcmp(sym, ARES_ARRAY_GET(&g_externs, i)->symbol, sym_len)) {
+            0 == memcmp(sym, ARES_ARRAY_GET(&g_externs, i)->symbol, sym_len)) {
             return ARES_ARRAY_GET(&g_externs, i);
         }
     }
@@ -1078,11 +1076,11 @@ const char *resolve_entry(u32 *start_pc) {
 }
 
 static void prepare_default_syms(void) {
-#define MMIO_LABEL(name, addrr)                                      \
+#define MMIO_LABEL(name, addrr)                                    \
     *ARES_ARRAY_PUSH(&g_labels) = (LabelData){.txt = (name),       \
-                                                .len = strlen(name), \
-                                                .addr = (addrr),     \
-                                                .section = g_mmio}
+                                              .len = strlen(name), \
+                                              .addr = (addrr),     \
+                                              .section = g_mmio}
 
     MMIO_LABEL("_MMIO_BASE", MMIO_BASE);
     MMIO_LABEL("_MMIO_END", MMIO_END);
@@ -1397,9 +1395,9 @@ export void assemble(const char *txt, size_t s, bool allow_externs) {
             }
             u32 addr = g_section->emit_idx + g_section->base;
             *ARES_ARRAY_PUSH(&g_labels) = (LabelData){.txt = ident,
-                                                        .len = ident_len,
-                                                        .addr = addr,
-                                                        .section = g_section};
+                                                      .len = ident_len,
+                                                      .addr = addr,
+                                                      .section = g_section};
             continue;
         }
 
@@ -1462,8 +1460,7 @@ bool pc_to_label_r(u32 pc, LabelData **ret, u32 *off) {
 
     for (size_t i = 0; i < ARES_ARRAY_LEN(&g_labels); i++) {
         if (ARES_ARRAY_GET(&g_labels, i)->addr <= pc &&
-            (!closest ||
-             ARES_ARRAY_GET(&g_labels, i)->addr > closest->addr)) {
+            (!closest || ARES_ARRAY_GET(&g_labels, i)->addr > closest->addr)) {
             closest = ARES_ARRAY_GET(&g_labels, i);
         }
     }

@@ -35,6 +35,7 @@ export class WasmInterface {
   private exports?: WasmExports;
   private loadedPromise?: Promise<void>;
   private originalMemory?: Uint8Array;
+  private currRunMemory?: Uint8Array;
   public textBuffer: string = "";
   public successfulExecution: boolean;
   public regsArr?: Uint32Array;
@@ -52,6 +53,9 @@ export class WasmInterface {
   public shadowStack?: Uint32Array;
   public shadowStackLen?: Uint32Array;
   public callsanWrittenBy?: Uint8Array;
+
+  // Track executed instructions for reverse-step functionality
+  public numOfExecutedInstructions: number = 0; // Total number of instructions executed
 
   public emu_load: (addr: number, size: number) => number;
 
@@ -90,7 +94,6 @@ export class WasmInterface {
       this.wasmInstance = instance;
       this.exports = this.wasmInstance.exports as unknown as WasmExports;
       this.emu_load = this.exports.emu_load;
-      // Save a snapshot of the original memory to restore between builds.
       this.originalMemory = new Uint8Array(this.memory.buffer.slice(0));
       console.log("Wasm module loaded");
     })();
@@ -152,6 +155,7 @@ export class WasmInterface {
       const errorStr = new TextDecoder("utf8").decode(error.slice(0, errorLen));
       return { line: errorLine, message: errorStr };
     }
+    this.currRunMemory = new Uint8Array(this.memory.buffer.slice(0));
 
     return null;
   }
@@ -219,6 +223,7 @@ export class WasmInterface {
   run(): void {
     this.exports.emulate();
     this.instructions++;
+    this.numOfExecutedInstructions++;
     if (this.instructions > INSTRUCTION_LIMIT) {
       this.textBuffer += `ERROR: instruction limit ${INSTRUCTION_LIMIT} reached\n`;
       this.hasError = true;
@@ -281,5 +286,31 @@ export class WasmInterface {
       }
       this.hasError = true;
     }
+  }
+
+  executeNInstructions(n: number): void {
+    this.resetToInitialState();
+    for (let i = 0; i < n; i++) {
+      this.exports.emulate();
+      this.instructions++;
+      this.numOfExecutedInstructions++;
+      if (this.runtimeErrorType[0] != 0 || this.hasError || this.successfulExecution) {
+        break;
+      }
+    }
+  }
+
+  reverseStep(): void {
+    if (this.numOfExecutedInstructions <= 0) return;
+    const targetInstructions = this.numOfExecutedInstructions - 1;
+    this.executeNInstructions(targetInstructions);
+  }
+
+  resetToInitialState(): void {
+    this.successfulExecution = false;
+    this.instructions = 0;
+    this.hasError = false;
+    this.createU8(0).set(this.currRunMemory);
+    this.numOfExecutedInstructions = 0;
   }
 }
