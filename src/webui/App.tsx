@@ -650,6 +650,7 @@ const App: Component = () => {
 								writeAddr={wasmInterface.memWrittenAddr ? wasmInterface.memWrittenAddr[0] : 0}
 								writeLen={wasmInterface.memWrittenLen ? wasmInterface.memWrittenLen[0] : 0}
 								sp={wasmInterface.regsArr ? wasmInterface.regsArr[2 - 1] : 0}
+								pc={wasmRuntime.status == "debug" ? wasmInterface.pc[0] : 0}
 								load={wasmInterface.emu_load}
 								disassemble={(pc) => wasmInterface.disassemble(pc)}
 							/>}
