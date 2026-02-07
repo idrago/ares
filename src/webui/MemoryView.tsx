@@ -7,7 +7,7 @@ import { displayFormat, formatMemoryValue, unitSize, getCellWidthChars } from ".
 
 const ROW_HEIGHT: number = 24;
 
-export const MemoryView: Component<{ version: () => any, writeAddr: number, writeLen: number, sp: number, load: (addr: number, pow: number) => number | null }> = (props) => {
+export const MemoryView: Component<{ version: () => any, writeAddr: number, writeLen: number, sp: number, load: (addr: number, pow: number) => number | null, disassemble: (pc: number) => string | null }> = (props) => {
     let parentRef: HTMLDivElement | undefined;
     let dummyChar: HTMLDivElement | undefined;
 
@@ -36,26 +36,36 @@ export const MemoryView: Component<{ version: () => any, writeAddr: number, writ
         const unit = getUnitBytes();
 
         if (cw > 0 && containerW > 0) {
-            const addressGutterChars = 12; 
-            const availablePx = containerW - (addressGutterChars * cw);
-            
-            // Get the MAXIMUM width needed (format-independent)
-            const unitWidthChars = getCellWidthChars(unit);
-            const valuesPerChunk = 4 / unit;
-            
-            // Calculate chunk width: (units * their width) + (gaps between units)
-            const chunkWidthChars = (valuesPerChunk * unitWidthChars) + valuesPerChunk; 
-            const chunkWidthPx = chunkWidthChars * cw;
+            if (activeTab() != "disasm") {
+                const addressGutterChars = 12;
+                const availablePx = containerW - (addressGutterChars * cw);
 
-            const count = Math.max(1, Math.floor(availablePx / chunkWidthPx));
-            
-            setChunksPerLine(count + 1); // +1 because loop uses (chunksPerLine - 1)
-            setLineCount(Math.ceil(65536 / (count * 4)));
+                // Get the MAXIMUM width needed (format-independent)
+                const unitWidthChars = getCellWidthChars(unit);
+                const valuesPerChunk = 4 / unit;
+
+                // Calculate chunk width: (units * their width) + (gaps between units)
+                const chunkWidthChars = (valuesPerChunk * unitWidthChars) + valuesPerChunk;
+                const chunkWidthPx = chunkWidthChars * cw;
+
+                const count = Math.max(1, Math.floor(availablePx / chunkWidthPx));
+
+                setChunksPerLine(count + 1); // +1 because loop uses (chunksPerLine - 1)
+                setLineCount(Math.ceil(65536 / (count * 4)));
+            }
         }
     });
 
     const rowVirtualizer = createVirtualizer({
         get count() { return lineCount(); },
+        getScrollElement: () => parentRef ?? null,
+        estimateSize: () => ROW_HEIGHT,
+        overscan: 5,
+    });
+
+
+    const rowVirtualizer2 = createVirtualizer({
+        get count() { return 65536 / 4 },
         getScrollElement: () => parentRef ?? null,
         estimateSize: () => ROW_HEIGHT,
         overscan: 5,
@@ -69,14 +79,14 @@ export const MemoryView: Component<{ version: () => any, writeAddr: number, writ
             if (activeTab() == "stack") {
                 const lastIndex = lineCount() - 1;
                 rowVirtualizer.scrollToIndex(lastIndex);
-            } else {
+            } else if (activeTab() != "disasm") {
                 rowVirtualizer.scrollToIndex(0);
             }
         }
     });
 
     const getStartAddr = () => {
-        if (activeTab() == ".text") return TEXT_BASE;
+        if (activeTab() == ".text" || activeTab() == "disasm") return TEXT_BASE;
         if (activeTab() == ".data") return DATA_BASE;
         if (activeTab() == "stack") return STACK_TOP - 65536;
         return 0;
@@ -84,8 +94,8 @@ export const MemoryView: Component<{ version: () => any, writeAddr: number, writ
 
     return (
         <div class="h-full flex flex-col overflow-hidden" style={{ contain: "strict" }} onMouseDown={() => setAddrSelect(-1)}>
-            <TabSelector tab={activeTab()} setTab={setActiveTab} tabs={[".text", ".data", "stack", "frames"]} />
-            
+            <TabSelector tab={activeTab()} setTab={setActiveTab} tabs={[".text", "disasm", ".data", "stack", "frames"]} />
+
             <Portal mount={document.body}>
                 <Show when={hoveredNumber() !== null}>
                     <div
@@ -112,11 +122,39 @@ export const MemoryView: Component<{ version: () => any, writeAddr: number, writ
                         version={props.version} />
                 </Show>
 
-                <Show when={activeTab() != "frames"}>
+                <Show when={activeTab() == "disasm"}>
+                    <div style={{ height: `${rowVirtualizer2.getTotalSize()}px`, width: "100%", position: "relative" }}>
+                        <For each={rowVirtualizer2.getVirtualItems()}>
+                            {(virtRow) => (
+                                <div
+                                    style={{ position: "absolute", top: `${virtRow.start}px`, height: `${ROW_HEIGHT}px` }}
+                                    class="flex flex-row items-center w-full"
+                                >
+                                    {/* Address Column */}
+                                    <div
+                                        class={"theme-fg2 shrink-0 w-[10ch] mr-[2ch] tabular-nums " + ((addrSelect() == virtRow.index) ? "select-text" : "select-none")}
+                                        onMouseDown={(e) => { setAddrSelect(virtRow.index); e.stopPropagation(); }}>
+                                        {(getStartAddr() + virtRow.index * (chunksPerLine() - 1) * 4).toString(16).padStart(8, "0")}
+                                    </div>
+
+                                    {(() => {
+                                        props.version();
+                                        const basePtr = getStartAddr() + virtRow.index * 4;
+                                        let inst = props.disassemble ? props.disassemble(basePtr) : "";
+                                        console.log(basePtr, inst);
+                                        return inst;
+                                    })()}
+                                </div>
+                            )}
+                        </For>
+                    </div>
+                </Show>
+
+                <Show when={activeTab() != "frames" && activeTab() != "disasm"}>
                     <div style={{ height: `${rowVirtualizer.getTotalSize()}px`, width: "100%", position: "relative" }}>
                         <For each={rowVirtualizer.getVirtualItems()}>
                             {(virtRow) => (
-                                <div 
+                                <div
                                     style={{ position: "absolute", top: `${virtRow.start}px`, height: `${ROW_HEIGHT}px` }}
                                     class="flex flex-row items-center w-full"
                                 >
@@ -148,17 +186,17 @@ export const MemoryView: Component<{ version: () => any, writeAddr: number, writ
                                                 let isAnimated = ptr >= props.writeAddr && ptr < props.writeAddr + props.writeLen;
                                                 let isGray = activeTab() == "stack" && ptr < props.sp;
                                                 let isFrame = ptr >= props.sp && ptr < props.sp + 4;
-                                                
+
                                                 let style = isGray ? "theme-fg2" : isFrame ? "frame-highlight" : isAnimated ? "animate-fade-highlight" : selectMode;
-                                                
+
                                                 // Use max width for consistent layout
                                                 const cellWidth = getCellWidthChars(bytesPerUnit);
                                                 const str = formatMemoryValue(props.load ? props.load(ptr, bytesPerUnit) : 0, bytesPerUnit);
                                                 components.push(
                                                     <span
                                                         class={style + " cursor-default text-right tabular-nums whitespace-pre"}
-                                                        style={{ 
-                                                            "margin-right": `${cellWidth - str.length}ch`, 
+                                                        style={{
+                                                            "margin-right": `${cellWidth - str.length}ch`,
                                                             "display": "inline-block"
                                                         }}
                                                         onMouseEnter={(e) => {

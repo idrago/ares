@@ -6,10 +6,12 @@ interface WasmExports {
   assemble: (offset: number, len: number, allow_externs: boolean) => void;
   pc_to_label: (pc: number) => void;
   emu_load: (addr: number, size: number) => number;
+  emu_disassemble: (addr: number) => number;
   __heap_base: number;
   g_regs: number;
   g_heap_size: number;
   g_mem_written_addr: number;
+  g_emu_disassemble_buf: number;
   g_mem_written_len: number;
   g_reg_written: number;
   g_pc: number;
@@ -167,6 +169,14 @@ export class WasmInterface {
       return labelStr;
     }
     return "0x" + pc.toString(16);
+  }
+
+  disassemble(pc: number): string {
+    const inst = this.exports.emu_load(pc, 4);
+    const len = this.exports.emu_disassemble(inst);
+    const arr = this.createU8(this.exports.g_emu_disassemble_buf);
+    const str = new TextDecoder("utf8").decode(arr.slice(0, len));
+    return str;
   }
 
   getRegisterName(idx: number): string {

@@ -251,12 +251,11 @@ void do_sret() {
     g_pc = g_csr[CSR_SEPC];
 }
 
-
 // TODO: trap invalid CSRs
 // and make unimplemented features read-only
 
-#define SSTATUS_MASK (STATUS_SIE|STATUS_SPIE|STATUS_SPP|STATUS_FS_MASK)
-#define SUPERVISOR_INT_MASK ((1<<1)|(1<<5)|(1<<9))
+#define SSTATUS_MASK (STATUS_SIE | STATUS_SPIE | STATUS_SPP | STATUS_FS_MASK)
+#define SUPERVISOR_INT_MASK ((1 << 1) | (1 << 5) | (1 << 9))
 
 u32 rdcsr(u32 csr) {
     u32 mask = -1u;
@@ -273,7 +272,9 @@ void wrcsr(u32 csr, u32 val) {
     u32 mask = -1u;
     if (csr == _CSR_SSTATUS) csr = CSR_MSTATUS, mask = SSTATUS_MASK;
     else if (csr == _CSR_SIE) csr = CSR_MIE, mask = SUPERVISOR_INT_MASK;
-    else if (csr == _CSR_SIP) csr = CSR_MIP, mask = 1u << (CAUSE_SUPERVISOR_SOFTWARE & ~CAUSE_INTERRUPT);
+    else if (csr == _CSR_SIP)
+        csr = CSR_MIP,
+        mask = 1u << (CAUSE_SUPERVISOR_SOFTWARE & ~CAUSE_INTERRUPT);
     g_csr[csr] = (g_csr[csr] & ~mask) | (val & mask);
 }
 
@@ -519,8 +520,8 @@ void emulate() {
             g_regs[rd] = old;
         } else if (funct3 == 0b101) {  // CSRRWI
             g_regs[rd] = g_csr[itype];
-            if (rs1 != 0) wrcsr(itype, rs1);        // used as imm
-        } else if (funct3 == 0b110) {  // CSRRSI
+            if (rs1 != 0) wrcsr(itype, rs1);  // used as imm
+        } else if (funct3 == 0b110) {         // CSRRSI
             u32 old = rdcsr(itype);
             if (rs1 != 0) wrcsr(itype, old | rs1);
             g_regs[rd] = old;
@@ -552,6 +553,307 @@ end:
     return;
 }
 
+static size_t u32_to_str(uint32_t val, char *buf, size_t buflen) {
+    if (buflen == 0) return 0;
+    char tmp[11];
+    int i = 0;
+    if (val == 0) {
+        if (buflen > 1) {
+            buf[0] = '0';
+            buf[1] = '\0';
+            return 1;
+        } else return 0;
+    }
+    while (val && i < 10) {
+        tmp[i++] = '0' + (val % 10);
+        val /= 10;
+    }
+    size_t n = 0;
+    while (i-- && n + 1 < buflen) {
+        buf[n++] = tmp[i];
+    }
+    if (n < buflen) buf[n] = '\0';
+    return n;
+}
+
+static size_t i32_to_str(int32_t val, char *buf, size_t buflen) {
+    if (buflen == 0) return 0;
+    if (val < 0) {
+        if (buflen < 2) return 0;
+        buf[0] = '-';
+        size_t n = u32_to_str((uint32_t)(-val), buf + 1, buflen - 1);
+        return n + 1;
+    } else {
+        return u32_to_str((uint32_t)val, buf, buflen);
+    }
+}
+
+size_t disassemble(uint32_t inst, char *buf, size_t buflen) {
+    if (buflen == 0) return 0;
+    buf[0] = '\0';
+    size_t pos = 0;
+
+    uint32_t rd = extr(inst, 11, 7);
+    uint32_t rs1 = extr(inst, 19, 15);
+    uint32_t rs2 = extr(inst, 24, 20);
+    uint32_t funct7 = extr(inst, 31, 25);
+    uint32_t funct3 = extr(inst, 14, 12);
+
+    int32_t btype =
+        sext((extr(inst, 31, 31) << 12) | (extr(inst, 7, 7) << 11) |
+                 (extr(inst, 30, 25) << 5) | (extr(inst, 11, 8) << 1),
+             13);
+    int32_t stype = sext((extr(inst, 31, 25) << 5) | (extr(inst, 11, 7)), 12);
+    int32_t jtype =
+        sext((extr(inst, 31, 31) << 20) | (extr(inst, 19, 12) << 12) |
+                 (extr(inst, 20, 20) << 11) | (extr(inst, 30, 21) << 1),
+             21);
+    int32_t itype = sext(extr(inst, 31, 20), 12);
+    uint32_t utype = extr(inst, 31, 12) << 12;
+
+    uint32_t opcode = extr(inst, 6, 0);
+
+#define APPEND_STR(s)                                       \
+    do {                                                    \
+        const char *_p = s;                                 \
+        while (*_p && pos + 1 < buflen) buf[pos++] = *_p++; \
+    } while (0)
+
+#define APPEND_U32(x)                                      \
+    do {                                                   \
+        char tmp[12];                                      \
+        u32_to_str(x, tmp, sizeof(tmp));                   \
+        for (size_t _i = 0; tmp[_i] && pos < buflen; _i++) \
+            buf[pos++] = tmp[_i];                          \
+    } while (0)
+
+#define APPEND_I32(x)                                      \
+    do {                                                   \
+        char tmp[12];                                      \
+        i32_to_str(x, tmp, sizeof(tmp));                   \
+        for (size_t _i = 0; tmp[_i] && pos < buflen; _i++) \
+            buf[pos++] = tmp[_i];                          \
+    } while (0)
+
+    // LUI
+    if (opcode == 0b0110111) {
+        APPEND_STR("lui x");
+        APPEND_U32(rd);
+        APPEND_STR(", ");
+        APPEND_U32(utype);
+        goto done;
+    }
+
+    // AUIPC
+    if (opcode == 0b0010111) {
+        APPEND_STR("auipc x");
+        APPEND_U32(rd);
+        APPEND_STR(", ");
+        APPEND_U32(utype);
+        goto done;
+    }
+
+    // JAL
+    if (opcode == 0b1101111) {
+        APPEND_STR("jal x");
+        APPEND_U32(rd);
+        APPEND_STR(", ");
+        APPEND_I32(jtype);
+        goto done;
+    }
+
+    // JALR
+    if (opcode == 0b1100111) {
+        APPEND_STR("jalr x");
+        APPEND_U32(rd);
+        APPEND_STR(", x");
+        APPEND_U32(rs1);
+        APPEND_STR(", ");
+        APPEND_I32(itype);
+        goto done;
+    }
+
+    // Branch
+    if (opcode == 0b1100011) {
+        const char *name = "";
+        if (funct3 == 0b000) name = "beq";
+        else if (funct3 == 0b001) name = "bne";
+        else if (funct3 == 0b100) name = "blt";
+        else if (funct3 == 0b101) name = "bge";
+        else if (funct3 == 0b110) name = "bltu";
+        else if (funct3 == 0b111) name = "bgeu";
+        APPEND_STR(name);
+        APPEND_STR(" x");
+        APPEND_U32(rs1);
+        APPEND_STR(", x");
+        APPEND_U32(rs2);
+        APPEND_STR(", ");
+        APPEND_I32(btype);
+        goto done;
+    }
+
+    // Load
+    if (opcode == 0b0000011) {
+        const char *name = "";
+        if (funct3 == 0b000) name = "lb";
+        else if (funct3 == 0b001) name = "lh";
+        else if (funct3 == 0b010) name = "lw";
+        else if (funct3 == 0b100) name = "lbu";
+        else if (funct3 == 0b101) name = "lhu";
+        APPEND_STR(name);
+        APPEND_STR(" x");
+        APPEND_U32(rd);
+        APPEND_STR(", ");
+        APPEND_I32(itype);
+        APPEND_STR("(x");
+        APPEND_U32(rs1);
+        APPEND_STR(")");
+        goto done;
+    }
+
+    // Store
+    if (opcode == 0b0100011) {
+        const char *name = "";
+        if (funct3 == 0b000) name = "sb";
+        else if (funct3 == 0b001) name = "sh";
+        else if (funct3 == 0b010) name = "sw";
+        APPEND_STR(name);
+        APPEND_STR(" x");
+        APPEND_U32(rs2);
+        APPEND_STR(", ");
+        APPEND_I32(stype);
+        APPEND_STR("(x");
+        APPEND_U32(rs1);
+        APPEND_STR(")");
+        goto done;
+    }
+
+    // I-type arithmetic
+    if (opcode == 0b0010011) {
+        bool shift = false;
+        const char *name = "";
+        if (funct3 == 0b000) name = "addi";
+        else if (funct3 == 0b010) name = "slti";
+        else if (funct3 == 0b011) name = "sltiu";
+        else if (funct3 == 0b100) name = "xori";
+        else if (funct3 == 0b110) name = "ori";
+        else if (funct3 == 0b111) name = "andi";
+        else if (funct3 == 0b001 && funct7 == 0) shift = true, name = "slli";
+        else if (funct3 == 0b101 && funct7 == 0) shift = true, name = "srli";
+        else if (funct3 == 0b101 && funct7 == 32) shift = true, name = "srai";
+        APPEND_STR(name);
+        APPEND_STR(" x");
+        APPEND_U32(rd);
+        APPEND_STR(", x");
+        APPEND_U32(rs1);
+        APPEND_STR(", ");
+        if (shift) APPEND_U32(itype & 31);
+        else APPEND_I32(itype);
+        goto done;
+    }
+
+    // R-type
+    if (opcode == 0b0110011) {
+        const char *name = "";
+        if (funct3 == 0b000 && funct7 == 0) name = "add";
+        else if (funct3 == 0b000 && funct7 == 32) name = "sub";
+        else if (funct3 == 0b001 && funct7 == 0) name = "sll";
+        else if (funct3 == 0b010 && funct7 == 0) name = "slt";
+        else if (funct3 == 0b011 && funct7 == 0) name = "sltu";
+        else if (funct3 == 0b100 && funct7 == 0) name = "xor";
+        else if (funct3 == 0b101 && funct7 == 0) name = "srl";
+        else if (funct3 == 0b101 && funct7 == 32) name = "sra";
+        else if (funct3 == 0b110 && funct7 == 0) name = "or";
+        else if (funct3 == 0b111 && funct7 == 0) name = "and";
+        else if (funct3 == 0b000 && funct7 == 1) name = "mul";
+        else if (funct3 == 0b001 && funct7 == 1) name = "mulh";
+        else if (funct3 == 0b010 && funct7 == 1) name = "mulhsu";
+        else if (funct3 == 0b011 && funct7 == 1) name = "mulhu";
+        else if (funct3 == 0b100 && funct7 == 1) name = "div";
+        else if (funct3 == 0b101 && funct7 == 1) name = "divu";
+        else if (funct3 == 0b110 && funct7 == 1) name = "rem";
+        else if (funct3 == 0b111 && funct7 == 1) name = "remu";
+        APPEND_STR(name);
+        APPEND_STR(" x");
+        APPEND_U32(rd);
+        APPEND_STR(", x");
+        APPEND_U32(rs1);
+        APPEND_STR(", x");
+        APPEND_U32(rs2);
+        goto done;
+    }
+
+    // SYSTEM
+    if (opcode == 0x73) {
+        const char *name = "";
+        uint32_t csr =
+            extr(inst, 31, 20);  // CSR address is in the immediate field
+
+        if (funct3 == 0b000) {
+            if (itype == 0x102) name = "sret";
+            else if (itype == 0) name = "ecall";
+            else if (itype == 1) name = "ebreak";
+            APPEND_STR(name);
+        } else if (funct3 == 0b001) {
+            // csrrw rd, csr, rs1
+            APPEND_STR("csrrw x");
+            APPEND_U32(rd);
+            APPEND_STR(", ");
+            APPEND_U32(csr);
+            APPEND_STR(", x");
+            APPEND_U32(rs1);
+        } else if (funct3 == 0b010) {
+            // csrrs rd, csr, rs1
+            APPEND_STR("csrrs x");
+            APPEND_U32(rd);
+            APPEND_STR(", ");
+            APPEND_U32(csr);
+            APPEND_STR(", x");
+            APPEND_U32(rs1);
+        } else if (funct3 == 0b011) {
+            // csrrc rd, csr, rs1
+            APPEND_STR("csrrc x");
+            APPEND_U32(rd);
+            APPEND_STR(", ");
+            APPEND_U32(csr);
+            APPEND_STR(", x");
+            APPEND_U32(rs1);
+        } else if (funct3 == 0b101) {
+            // csrrwi rd, csr, uimm
+            APPEND_STR("csrrwi x");
+            APPEND_U32(rd);
+            APPEND_STR(", ");
+            APPEND_U32(csr);
+            APPEND_STR(", ");
+            APPEND_U32(rs1);  // rs1 field used as 5-bit unsigned immediate
+        } else if (funct3 == 0b110) {
+            // csrrsi rd, csr, uimm
+            APPEND_STR("csrrsi x");
+            APPEND_U32(rd);
+            APPEND_STR(", ");
+            APPEND_U32(csr);
+            APPEND_STR(", ");
+            APPEND_U32(rs1);
+        } else if (funct3 == 0b111) {
+            // csrrci rd, csr, uimm
+            APPEND_STR("csrrci x");
+            APPEND_U32(rd);
+            APPEND_STR(", ");
+            APPEND_U32(csr);
+            APPEND_STR(", ");
+            APPEND_U32(rs1);
+        }
+        goto done;
+    }
+    // default unknown
+    APPEND_STR("<unhandled>");
+
+done:
+    if (pos < buflen) buf[pos] = '\0';
+    else buf[buflen - 1] = '\0';
+    return pos;
+}
+
 // wrapper for the webui
 u32 emu_load(u32 addr, int size) {
     bool err;
@@ -560,13 +862,15 @@ u32 emu_load(u32 addr, int size) {
     return val;
 }
 
-void emulator_enter_kernel() {
-    g_privilege_level = PRIV_SUPERVISOR;
+char g_emu_disassemble_buf[64];
+
+size_t emu_disassemble(uint32_t inst) {
+    return disassemble(inst, g_emu_disassemble_buf, 64);
 }
 
-void emulator_leave_kernel() {
-    g_privilege_level = PRIV_USER;
-}
+void emulator_enter_kernel() { g_privilege_level = PRIV_SUPERVISOR; }
+
+void emulator_leave_kernel() { g_privilege_level = PRIV_USER; }
 
 void emulator_interrupt_set_pending(u32 intno) {
     g_csr[CSR_MIP] |= 1u << intno;
@@ -582,7 +886,7 @@ void emulator_deliver_interrupt(u32 cause) {
     assert(off < 32);
 
     int prev_privilege = g_privilege_level;
-    
+
     g_csr[CSR_SEPC] = g_pc;
     g_csr[CSR_SCAUSE] = cause;
 
@@ -590,13 +894,14 @@ void emulator_deliver_interrupt(u32 cause) {
     bool was_enabled = status & STATUS_SIE;
     g_privilege_level = PRIV_SUPERVISOR;
 
-    // STATUS.xIE = 0 
+    // STATUS.xIE = 0
     status &= ~STATUS_SIE;
     // STATUS.xPIE = STATUS.xIE of the old privilege
     status = (status & ~STATUS_SPIE) | (was_enabled ? STATUS_SPIE : 0);
     // STATUS.xPP = prev_privilege
     // NOTE: SPP is 1 bit long
-    status = (status & ~STATUS_SPP) | ((prev_privilege != PRIV_USER) ? STATUS_SPP : 0);
+    status = (status & ~STATUS_SPP) |
+             ((prev_privilege != PRIV_USER) ? STATUS_SPP : 0);
     g_csr[CSR_MSTATUS] = status;
 
     u32 tvec_base = g_csr[CSR_STVEC] & ~0x3u;

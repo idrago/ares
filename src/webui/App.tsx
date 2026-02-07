@@ -651,6 +651,7 @@ const App: Component = () => {
 								writeLen={wasmInterface.memWrittenLen ? wasmInterface.memWrittenLen[0] : 0}
 								sp={wasmInterface.regsArr ? wasmInterface.regsArr[2 - 1] : 0}
 								load={wasmInterface.emu_load}
+								disassemble={(pc) => wasmInterface.disassemble(pc)}
 							/>}
 							{() => <RegisterTable pc={(wasmRuntime.status == "idle" || wasmRuntime.status == "asmerr" || wasmRuntime.status == "testsuite") ? TEXT_BASE : wasmRuntime.pc}
 								regs={(wasmRuntime.status == "idle" || wasmRuntime.status == "asmerr" || wasmRuntime.status == "testsuite") ? initialRegs : wasmRuntime.regs}
