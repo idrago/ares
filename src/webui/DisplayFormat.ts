@@ -34,15 +34,15 @@ export function formatMemoryValue(value: number, bytes: number, format?: Display
             for (let i = 0; i < bytes; i++) {
                 hex += ((value >> (i * 8)) & 0xFF).toString(16).padStart(2, "0");
             }
-            return hex.padStart(width, " ");
+            return hex;
         }
         case "unsigned":
-            return (value >>> 0).toString().padStart(width, " ");
+            return (value >>> 0).toString();
         case "signed": {
             // Sign extend based on size
             const shift = 32 - (bytes * 8);
             const signed = (value << shift) >> shift;
-            return signed.toString().padStart(width, " ");
+            return signed.toString();
         }
     }
 }

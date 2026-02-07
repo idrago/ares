@@ -153,12 +153,12 @@ export const MemoryView: Component<{ version: () => any, writeAddr: number, writ
                                                 
                                                 // Use max width for consistent layout
                                                 const cellWidth = getCellWidthChars(bytesPerUnit);
-
+                                                const str = formatMemoryValue(props.load ? props.load(ptr, bytesPerUnit) : 0, bytesPerUnit);
                                                 components.push(
-                                                    <a
+                                                    <span
                                                         class={style + " cursor-default text-right tabular-nums whitespace-pre"}
                                                         style={{ 
-                                                            "width": `${cellWidth}ch`, 
+                                                            "margin-right": `${cellWidth - str.length}ch`, 
                                                             "display": "inline-block"
                                                         }}
                                                         onMouseEnter={(e) => {
@@ -168,8 +168,8 @@ export const MemoryView: Component<{ version: () => any, writeAddr: number, writ
                                                         onMouseMove={(e) => setMousePos({ x: e.clientX, y: e.clientY })}
                                                         onMouseLeave={() => setHoveredNumber(null)}
                                                     >
-                                                        {formatMemoryValue(props.load ? props.load(ptr, bytesPerUnit) : 0, bytesPerUnit)}
-                                                    </a>
+                                                        {str}
+                                                    </span>
                                                 );
                                             }
                                         }
