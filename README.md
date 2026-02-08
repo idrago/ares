@@ -1,8 +1,8 @@
 # ARES
 A minimal assembler, editor, simulator and debugger for RISC-V (RV32IM), meant to be a useful tool for computer architecture students.
-This project was inspired by [RARS](https://github.com/TheThirdOne/rars), but it is not affiliated with it in any way.
+This project was inspired by [RARS](https://github.com/TheThirdOne/rars).
 
-You can try it now online on [ares-sim.github.io](https://ares-sim.github.io).
+You can try it online on [ares-sim.github.io](https://ares-sim.github.io).
 
 ![Screenshot of the ARES Web UI, debugging a recursive factorial program](images/webui.png)
 ## Features
@@ -11,12 +11,21 @@ This initial release introduces the following core features:
 - **modern editing experience**:
   - whole-UI light and dark themes
   - CodeMirror 6-based editor with RV32IM syntax highlighting
-  - live error reporting
+  - live assembler error reporting
 - **debugging tools**:
-  - register and memory visualization with live updates
-  - call stack inspector
+  - register and memory visualization with animation to highlight writes
   - breakpoint management
   - step/next/continue debugging
+  - reverse debugging (step back)
+  - call stack inspector with parameters
+- **calling convention checker** (CallSan):
+  - detect uninitialized reads at program start, at function entry, and after function return
+  - detect invalid stack movement and access
+  - validate callee-saved register save and restore
+  - detect mismatched call stack
+- **assignment mode**:
+  - embedded instructions
+  - CodeRunner-style test suite with expected/actual
 
 ### Command-line utilities
 - minimal, cross-platform C
