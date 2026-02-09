@@ -7,7 +7,7 @@ import { displayFormat, formatMemoryValue, unitSize, getCellWidthChars } from ".
 
 const ROW_HEIGHT: number = 24;
 
-export const MemoryView: Component<{ version: () => any, writeAddr: number, writeLen: number, pc: number, sp: number, load: (addr: number, pow: number) => number | null, disassemble: (pc: number) => string | null }> = (props) => {
+export const MemoryView: Component<{ version: () => any, writeAddr: number, writeLen: number, pc: number, sp: number, load: (addr: number, pow: number) => number, disassemble: (pc: number) => string | null }> = (props) => {
     let parentRef: HTMLDivElement | undefined;
     let dummyChar: HTMLDivElement | undefined;
 

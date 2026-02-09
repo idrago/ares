@@ -1,4 +1,4 @@
-import { Component, For, Index } from "solid-js";
+import { Component } from "solid-js";
 import { displayFormat, formatRegister } from "./DisplayFormat";
 
 export const RegisterTable: Component<{ pc: number, regs: number[], regWritten: number }> = (props) => {

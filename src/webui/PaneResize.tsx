@@ -1,4 +1,4 @@
-import { createSignal, onMount, onCleanup, Component, Show } from "solid-js";
+import { Component, createSignal, onCleanup, onMount, Show } from "solid-js";
 import { JSX } from "solid-js/jsx-runtime";
 
 export const PaneResize: Component<{

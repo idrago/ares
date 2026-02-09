@@ -29,27 +29,27 @@ interface WasmExports {
 
 const INSTRUCTION_LIMIT: number = 100 * 1000;
 
+
 export class WasmInterface {
-  private memory: WebAssembly.Memory;
-  private wasmInstance?: WebAssembly.Instance;
-  private exports?: WasmExports;
-  private loadedPromise?: Promise<void>;
-  private originalMemory?: Uint8Array;
-  private currRunMemory?: Uint8Array;
-  public successfulExecution: boolean;
-  public regsArr?: Uint32Array;
-  public memWrittenLen?: Uint32Array;
-  public memWrittenAddr?: Uint32Array;
-  public regWritten?: Uint32Array;
-  public pc?: Uint32Array;
+  private readonly memory: WebAssembly.Memory;
+  private readonly wasmInstance: WebAssembly.Instance;
+  private readonly exports: WasmExports;
+  private readonly originalMemory: Uint8Array;
+  public readonly regsArr: Uint32Array;
+  public readonly memWrittenLen: Uint32Array;
+  public readonly memWrittenAddr: Uint32Array;
+  public readonly regWritten: Uint32Array;
+  public readonly pc: Uint32Array;
+  public readonly runtimeErrorParams: Uint32Array;
+  public readonly runtimeErrorType: Uint32Array;
+  public readonly shadowStackPtr: Uint32Array;
+  public readonly shadowStackLen: Uint32Array;
+  public readonly callsanWrittenBy: Uint8Array;
+
+  public successfulExecution: boolean = false;
+  private currRunMemory: Uint8Array;
   public textByLinenum?: Uint32Array;
   public textByLinenumLen?: Uint32Array;
-  public runtimeErrorParams?: Uint32Array;
-  public runtimeErrorType?: Uint32Array;
-  public shadowStackPtr?: Uint32Array;
-  public shadowStack?: Uint32Array;
-  public shadowStackLen?: Uint32Array;
-  public callsanWrittenBy?: Uint8Array;
 
   public textBuffer: string = "";
   public hasError: boolean = false;
@@ -57,65 +57,13 @@ export class WasmInterface {
 
   public emu_load: (addr: number, size: number) => number;
 
-  constructor() {
-    this.memory = new WebAssembly.Memory({ initial: 7 });
-  }
-
-  createU8(off: number) {
-    return new Uint8Array(this.memory.buffer, off);
-  }
-  createU32(off: number) {
-    return new Uint32Array(this.memory.buffer, off);
-  }
-
-  async loadModule(): Promise<void> {
-    if (this.loadedPromise) return this.loadedPromise;
-    this.loadedPromise = (async () => {
-      const res = await fetch(wasmUrl);
-      const buffer = await res.arrayBuffer();
-      const { instance } = await WebAssembly.instantiate(buffer, {
-        env: {
-          memory: this.memory,
-          putchar: (n: number) => {
-            this.textBuffer += String.fromCharCode(n);
-          },
-          emu_exit: () => {
-            console.log("EXIT");
-            this.successfulExecution = true;
-          },
-          panic: () => {
-            alert("wasm panic");
-          },
-          gettime64: () => BigInt(new Date().getTime() * 10 * 1000),
-        },
-      });
-      this.wasmInstance = instance;
-      this.exports = this.wasmInstance.exports as unknown as WasmExports;
-      this.emu_load = this.exports.emu_load;
-      this.originalMemory = new Uint8Array(this.memory.buffer.slice(0));
-      console.log("Wasm module loaded");
-    })();
-    return this.loadedPromise;
-  }
-
-  async build(
-    source: string,
-  ): Promise<{ line: number; message: string } | null> {
-    if (!this.wasmInstance) {
-      await this.loadModule();
-    }
-
-    this.successfulExecution = false;
-    this.textBuffer = "";
-    this.hasError = false;
-    this.numOfExecutedInstructions = 0;
-    this.createU8(0).set(this.originalMemory);
-
-    const encoder = new TextEncoder();
-    const strBytes = encoder.encode(source);
-    const strLen = strBytes.length;
-    const offset = this.exports.__heap_base;
-
+  constructor(memory: WebAssembly.Memory, instance: WebAssembly.Instance) {
+    this.memory = memory;
+    this.wasmInstance = instance;
+    this.exports = this.wasmInstance.exports as unknown as WasmExports;
+    this.emu_load = this.exports.emu_load;
+    this.originalMemory = new Uint8Array(this.memory.buffer.slice(0));
+    this.currRunMemory = new Uint8Array(this.memory.buffer.slice(0));
     this.memWrittenAddr = this.createU32(this.exports.g_mem_written_addr);
     this.memWrittenLen = this.createU32(this.exports.g_mem_written_len);
     this.regWritten = this.createU32(this.exports.g_reg_written);
@@ -130,6 +78,55 @@ export class WasmInterface {
     this.callsanWrittenBy = this.createU8(
       this.exports.g_callsan_stack_written_by,
     );
+  }
+
+  createU8(off: number) {
+    return new Uint8Array(this.memory.buffer, off);
+  }
+  createU32(off: number) {
+    return new Uint32Array(this.memory.buffer, off);
+  }
+
+
+  public static async loadModule(): Promise<WasmInterface> {
+    const memory = new WebAssembly.Memory({ initial: 7 });
+    const res = await fetch(wasmUrl);
+    const buffer = await res.arrayBuffer();
+    let iface: WasmInterface | null;
+    const { instance } = await WebAssembly.instantiate(buffer, {
+      env: {
+        memory: memory,
+        putchar: (n: number) => {
+          if (iface) iface.textBuffer += String.fromCharCode(n);
+        },
+        emu_exit: () => {
+          if (iface) iface.successfulExecution = true;
+        },
+        panic: () => {
+          alert("wasm panic");
+        },
+        gettime64: () => BigInt(new Date().getTime() * 10 * 1000),
+      },
+    });
+    iface = new WasmInterface(memory, instance);
+    return iface;
+  }
+
+  build(
+    source: string,
+  ): { line: number; message: string } | null {
+
+    this.successfulExecution = false;
+    this.textBuffer = "";
+    this.hasError = false;
+    this.numOfExecutedInstructions = 0;
+    this.createU8(0).set(this.originalMemory);
+
+    const encoder = new TextEncoder();
+    const strBytes = encoder.encode(source);
+    const strLen = strBytes.length;
+    const offset = this.exports.__heap_base;
+
     if (offset + strLen > this.memory.buffer.byteLength) {
       const pages = Math.ceil(
         (offset + strLen - this.memory.buffer.byteLength) / 65536,
