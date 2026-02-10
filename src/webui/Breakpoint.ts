@@ -26,7 +26,8 @@ const breakpointEffect = StateEffect.define<{ pos: number; on: boolean }>({
   map: (val, mapping) => ({ pos: mapping.mapPos(val.pos), on: val.on }),
 });
 
-
+// TODO: slightly more polished vscode-like approach
+// where hover counts on the linenumber view too, not just the empty space
 export function breakpointGutter(update: (lines: number[]) => void) {
   const breakpointState = StateField.define<RangeSet<GutterMarker>>({
     create() {
@@ -52,6 +53,7 @@ export function breakpointGutter(update: (lines: number[]) => void) {
       class: "cm-breakpoint-gutter",
       markers: (v) => v.state.field(breakpointState),
       initialSpacer: () => breakpointMarker,
+      renderEmptyElements: true,
       domEventHandlers: {
         mousedown(view, line) {
           const pos = line.from; // why is it 0-idx'd here
@@ -78,6 +80,22 @@ export function breakpointGutter(update: (lines: number[]) => void) {
         color: "red",
         cursor: "default",
         paddingLeft: "0.3em",
+        position: "relative",
+      },
+      ".cm-breakpoint-gutter .cm-gutterElement:hover::before": {
+        content: '""',
+        position: "absolute",
+        left: "0.3em",
+        top: "50%",
+        transform: "translateY(-50%)",
+        width: "0.75em",
+        height: "0.75em",
+        borderRadius: "50%",
+        backgroundColor: "red",
+        opacity: "0.2",
+      },
+      ".cm-breakpoint-gutter .cm-gutterElement:has(.cm-breakpoint-marker)::before": {
+        display: "none",
       },
     }),
   ];
