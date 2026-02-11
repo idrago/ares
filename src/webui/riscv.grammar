@@ -107,7 +107,8 @@ RegisterExpression {
       "lui" | "auipc" |
       "li" |
       "la" |
-      "ecall"
+      "ecall" |
+      "ebreak"
     ) (spaces | newline | @eof)
   }
 

@@ -361,6 +361,7 @@ export function continueStep(_runtime: DebugState, setRuntime: SetStoreFunction<
 			temporaryBreakpoint = null;
 			break;
 		}
+		if (wasmInterface.gotBreakpoint[0] == 1) break;
 		if (breakpoints.has(wasmInterface.pc[0])) break;
 		if (wasmInterface.successfulExecution || wasmInterface.hasError) break;
 	}

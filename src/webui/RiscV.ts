@@ -13,6 +13,7 @@ interface WasmExports {
   g_mem_written_addr: number;
   g_emu_disassemble_buf: number;
   g_mem_written_len: number;
+  g_got_breakpoint: number;
   g_reg_written: number;
   g_pc: number;
   g_text_by_linenum: number;
@@ -37,6 +38,7 @@ export class WasmInterface {
   private readonly originalMemory: Uint8Array;
   public readonly regsArr: Uint32Array;
   public readonly memWrittenLen: Uint32Array;
+  public readonly gotBreakpoint: Uint32Array;
   public readonly memWrittenAddr: Uint32Array;
   public readonly regWritten: Uint32Array;
   public readonly pc: Uint32Array;
@@ -66,6 +68,7 @@ export class WasmInterface {
     this.currRunMemory = new Uint8Array(this.memory.buffer.slice(0));
     this.memWrittenAddr = this.createU32(this.exports.g_mem_written_addr);
     this.memWrittenLen = this.createU32(this.exports.g_mem_written_len);
+    this.gotBreakpoint = this.createU32(this.exports.g_got_breakpoint);
     this.regWritten = this.createU32(this.exports.g_reg_written);
     this.pc = this.createU32(this.exports.g_pc);
     this.regsArr = this.createU32(this.exports.g_regs + 4);

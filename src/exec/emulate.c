@@ -15,6 +15,9 @@ export u32 g_reg_written;
 export bool g_exited;
 export int g_exit_code;
 
+// u32 for WASM interop
+export u32 g_got_breakpoint;
+
 extern u32 g_runtime_error_params[2];
 extern Error g_runtime_error_type;
 
@@ -169,6 +172,13 @@ void STORE(u32 addr, u32 val, int size, bool *err) {
     *err = false;
 }
 
+// ebreak only does a breakpoint if the emulator caller knows about it
+// otherwise, it does nothing to allow runs to complete
+void do_ebreak() {
+    g_got_breakpoint = 1;
+    g_pc += 4;
+}
+
 void do_syscall() {
     u32 scause = CAUSE_U_ECALL;
     if (g_privilege_level == PRIV_SUPERVISOR) {
@@ -283,6 +293,7 @@ void emulate() {
     g_mem_written_len = 0;
     g_reg_written = 0;
     g_regs[0] = 0;
+    g_got_breakpoint = 0;
     bool err;
 
     if (g_csr[CSR_MSTATUS] & STATUS_SIE) {
@@ -502,8 +513,10 @@ void emulate() {
         if (funct3 == 0b000) {
             if (itype == 0x102) {  // SRET
                 do_sret();
-            } else {  // ECALL
+            } else if (itype == 0) {  // ECALL
                 do_syscall();
+            } else if (itype == 1) {
+                do_ebreak();
             }
             return;
         } else if (funct3 == 0b001) {  // CSRRW

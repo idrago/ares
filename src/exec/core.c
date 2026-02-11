@@ -935,6 +935,11 @@ const char *handle_ecall(Parser *p, const char *opcode, size_t opcode_len) {
     return NULL;
 }
 
+const char *handle_ebreak(Parser *p, const char *opcode, size_t opcode_len) {
+    asm_emit(0x00100073, p->startline);
+    return NULL;
+}
+
 const char *handle_sret(Parser *p, const char *opcode, size_t opcode_len) {
     asm_emit(0x10200073, p->startline);
     return NULL;
@@ -1023,6 +1028,7 @@ OpcodeHandling opcode_types[] = {
     {handle_li, {"li"}},
     {handle_la, {"la"}},
     {handle_ecall, {"ecall"}},
+    {handle_ebreak, {"ebreak"}},
     {handle_csr, {"csrrw", "csrrs", "csrrc"}},
     {handle_csr_imm, {"csrrwi", "csrrsi", "csrrci"}},
     {handle_sret, {"sret"}},
