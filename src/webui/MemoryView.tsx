@@ -7,7 +7,7 @@ import { displayFormat, formatMemoryValue, unitSize, getCellWidthChars } from ".
 
 const ROW_HEIGHT: number = 24;
 
-export const MemoryView: Component<{ version: () => any, writeAddr: number, writeLen: number, pc: number, sp: number, load: (addr: number, pow: number) => number, disassemble: (pc: number) => string | null }> = (props) => {
+export const MemoryView: Component<{ version: () => any, writeAddr: number, writeLen: number, pc: number, sp: number, fp: number, load: (addr: number, pow: number) => number, disassemble: (pc: number) => string | null }> = (props) => {
     let parentRef: HTMLDivElement | undefined;
     let dummyChar: HTMLDivElement | undefined;
 
@@ -182,16 +182,20 @@ export const MemoryView: Component<{ version: () => any, writeAddr: number, writ
                                             for (let j = 0; j < unitsPerChunk; j++) {
                                                 let ptr = basePtr + (j * bytesPerUnit);
                                                 if (ptr - getStartAddr() >= 65536) break;
-
                                                 let isAnimated = ptr >= props.writeAddr && ptr < props.writeAddr + props.writeLen;
-                                                let isGray = activeTab() == "stack" && ptr < props.sp;
-                                                let isFrame = ptr >= props.sp && ptr < props.sp + 4;
-
-                                                let style = isGray ? "theme-fg2" : isFrame ? "frame-highlight" : isAnimated ? "animate-fade-highlight" : selectMode;
-
+                                                // only handle FP here if it is set (it's 0 by default)
+                                                let isGray = activeTab() == "stack" && (ptr < props.sp || (props.fp > props.sp && ptr > props.fp));
+                                                // TODO: should we do +4 or +display_size?
+                                                let isSp = ptr >= props.sp && ptr < props.sp + 4;
+                                                let isFp = ptr >= props.fp && ptr < props.fp + 4;
+                                                let style = selectMode;
+                                                if (isAnimated) style = "animate-fade-highlight";
+                                                else if (isGray) style = "theme-fg2";
+                                                else if (isSp) style = "sp-highlight";
+                                                else if (isFp) style = "fp-highlight";
                                                 // Use max width for consistent layout
                                                 const cellWidth = getCellWidthChars(bytesPerUnit);
-                                                const str = formatMemoryValue(props.load ? props.load(ptr, bytesPerUnit) : 0, bytesPerUnit);
+                                                const str = formatMemoryValue(props.load(ptr, bytesPerUnit), bytesPerUnit);
                                                 components.push(
                                                     <span
                                                         class={style + " cursor-default text-right tabular-nums whitespace-pre"}
@@ -200,7 +204,7 @@ export const MemoryView: Component<{ version: () => any, writeAddr: number, writ
                                                             "display": "inline-block"
                                                         }}
                                                         onMouseEnter={(e) => {
-                                                            if (props.load) setHoveredNumber(props.load(ptr, bytesPerUnit));
+                                                            setHoveredNumber(props.load(ptr, bytesPerUnit));
                                                             setMousePos({ x: e.clientX, y: e.clientY });
                                                         }}
                                                         onMouseMove={(e) => setMousePos({ x: e.clientX, y: e.clientY })}

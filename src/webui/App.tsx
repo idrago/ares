@@ -94,7 +94,8 @@ const App: Component = () => {
 							{() => <MemoryView version={() => wasmRuntime.version}
 								writeAddr={wasmRuntime.status == "debug" ? wasmRuntime.memWrittenAddr : 0}
 								writeLen={wasmRuntime.status == "debug" ? wasmRuntime.memWrittenLen : 0}
-								sp={wasmInterface.regsArr ? wasmInterface.regsArr[2 - 1] : 0}
+								sp={wasmInterface.regsArr[2 - 1]}
+								fp={wasmInterface.regsArr[8 - 1]}
 								pc={wasmRuntime.status == "debug" ? wasmInterface.pc[0] : 0}
 								load={wasmInterface.emu_load}
 								disassemble={(pc) => wasmInterface.disassemble(pc)}

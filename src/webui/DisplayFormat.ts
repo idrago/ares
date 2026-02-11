@@ -4,7 +4,7 @@ export type DisplayFormat = "hex" | "unsigned" | "signed";
 export type UnitSize = "byte" | "half" | "word";
 
 const [displayFormat, setDisplayFormat] = createSignal<DisplayFormat>("hex");
-const [unitSize, setUnitSize] = createSignal<UnitSize>("byte");
+const [unitSize, setUnitSize] = createSignal<UnitSize>("word");
 
 export { displayFormat, setDisplayFormat, unitSize, setUnitSize };
 

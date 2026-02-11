@@ -47,8 +47,11 @@ function updateCss(colors: Colors): void {
 .theme-border {
 	border-color: ${colors.base2};
 }
-.frame-highlight {
+.sp-highlight {
 	background-color: ${colors.bggreen};
+}
+.fp-highlight {
+	background-color: ${colors.bgpurp};
 }
 .theme-testsuccess {
 	background-color: ${colors.testgreen};
