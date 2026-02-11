@@ -98,16 +98,17 @@ function parseInlineCode(text: string, container: HTMLElement): void {
     }
 }
 
+// NOTE: all characters heights are precalculated and valid since it is using monospace fonts entirely
 export const TestSuiteViewer: Component<{ table: TestSuiteTableEntry[], currentDebuggingEntry: number, textGetter: () => string }> = props => {
     return (
         <div class="theme-scrollbar theme-bg theme-fg overflow-x-auto overflow-y-auto w-full h-full">
             <table class="table w-full max-w-full h-full min-w-full border-collapse rounded-lg ">
                 <thead class=" ">
                     <tr class="  text-left theme-fg border-b theme-border">
-                        <th class="w-[8ch] px-2 py-1 font-semibold theme-fg">status</th>
-                        <th class="w-[14ch] px-2 py-1 font-semibold theme-fg">input</th>
-                        <th class="w-[8ch] px-2 py-1 font-semibold theme-fg whitespace-nowrap">expected</th>
-                        <th class="w-[14ch] px-2 py-1 font-semibold theme-fg whitespace-nowrap">yours</th>
+                        <th class="w-[8ch] font-mono px-2 py-1 font-semibold theme-fg">status</th>
+                        <th class="w-[14ch] font-mono px-2 py-1 font-semibold theme-fg">input</th>
+                        <th class="w-[8ch] font-mono px-2 py-1 font-semibold theme-fg whitespace-nowrap">expected</th>
+                        <th class="w-[14ch] font-mono px-2 py-1 font-semibold theme-fg whitespace-nowrap">yours</th>
                     </tr>
                 </thead>
                 <tbody class=" ">
@@ -116,18 +117,18 @@ export const TestSuiteViewer: Component<{ table: TestSuiteTableEntry[], currentD
                         const errorType = testcase.runErr ? "crashed" : "mismatched";
                         return (
                             <tr
-                                class={`  border-b theme-border ${passed ? 'theme-testsuccess' : 'theme-testfail'}`}
+                                class={`  border-b font-mono theme-border ${passed ? 'theme-testsuccess' : 'theme-testfail'}`}
                             >
                                 <td class="px-2">
                                     {passed ?
                                         <div class="flex flex-col">
-                                            <span class="text-sm">success</span>
+                                            <span class="text-sm font-semibold">success</span>
                                             <button class="text-left text-sm hover:font-semibold " on:click={() => startStepTestSuite(wasmRuntime, setWasmRuntime, index, props.textGetter())}>
                                                 {props.currentDebuggingEntry === index ? "debugging" : "debug it"}
                                             </button>
                                         </div> :
                                         <div class="flex flex-col">
-                                            <span class="text-sm">{errorType}</span>
+                                            <span class="text-sm font-semibold">{errorType}</span>
                                             <button class="text-left text-sm underline hover:font-semibold " on:click={() => startStepTestSuite(wasmRuntime, setWasmRuntime, index, props.textGetter())}>
                                                 {props.currentDebuggingEntry === index ? "debugging" : "debug it"}
                                             </button>
