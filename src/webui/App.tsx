@@ -80,7 +80,7 @@ const App: Component = () => {
 									highlightedLine={(wasmRuntime.status == "debug" || wasmRuntime.status == "error") ? getCurrentLine(wasmRuntime) : undefined}
 									editorInterfaceRef={editorInterface} setBreakpoints={setBreakpointLines}
 									diagnostics={wasmRuntime.status == "asmerr" ? { line: wasmRuntime.line, message: wasmRuntime.message } : undefined}
-									doBuild={doBuildForLinter}
+									doBuild={(s) => doBuildForLinter(wasmRuntime, setWasmRuntime, s)}
 									theme={currentTheme()}
 								/>}
 								{wasmRuntime => BacktraceView(wasmRuntime)}

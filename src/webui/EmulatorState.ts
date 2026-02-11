@@ -148,14 +148,14 @@ function setBreakpoints(): void {
 	}
 }
 
-export function doBuildForLinter(text: string): boolean {
-	if (wasmRuntime.status != "idle" && wasmRuntime.status != "stopped" && wasmRuntime.status != "asmerr") return false;
+export function doBuildForLinter(_runtime: RuntimeState, setRuntime: SetStoreFunction<RuntimeState>, text: string): boolean {
+	if (_runtime.status != "idle" && _runtime.status != "stopped" && _runtime.status != "asmerr") return false;
 	if (latestAsm["text"] != text) {
-		if (testData == null) buildAsm(wasmRuntime, setWasmRuntime, text);
+		if (testData == null) buildAsm(_runtime, setRuntime, text);
 		else {
 			let testcases = testData.testcases;
 			let testPrefix = testData.testPrefix;
-			buildWithTestcase(wasmRuntime, setWasmRuntime, testPrefix + testcases[0].input, text);
+			buildWithTestcase(_runtime, setRuntime, testPrefix + testcases[0].input, text);
 		}
 	}
 	return true;
