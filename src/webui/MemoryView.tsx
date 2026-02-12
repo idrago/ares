@@ -130,17 +130,17 @@ export const MemoryView: Component<{ version: () => any, writeAddr: number, writ
                             {(virtRow) => (
                                 <div
                                     style={{ "white-space": "nowrap", position: "absolute", top: `${virtRow.start}px`, height: `${ROW_HEIGHT}px` }}
-                                    class={"flex flex-row items-center w-full " + (props.version() && (getStartAddr() + virtRow.index * 4 == props.pc) ? "cm-debugging" : "")}
+                                    class={"flex flex-row items-center w-full " + (props.version() && (TEXT_BASE + virtRow.index * 4 == props.pc) ? "cm-debugging" : "")}
                                 >
                                     <div
-                                        class={"shrink-0 w-[10ch] tabular-nums " + ((addrSelect() == virtRow.index) ? "select-text " : "select-none ") + ((getStartAddr() + virtRow.index * 4 == props.pc) ? "theme-fg" : "theme-fg2")}
+                                        class={"shrink-0 w-[10ch] tabular-nums " + ((addrSelect() == virtRow.index) ? "select-text " : "select-none ") + ((TEXT_BASE + virtRow.index * 4 == props.pc) ? "theme-fg" : "theme-fg2")}
                                         onMouseDown={(e) => { setAddrSelect(virtRow.index); e.stopPropagation(); }}>
-                                        {(getStartAddr() + virtRow.index * (chunksPerLine() - 1) * 4).toString(16).padStart(8, "0")}
+                                        {(TEXT_BASE + virtRow.index * 4).toString(16).padStart(8, "0")}
                                     </div>
 
                                     {(() => {
                                         props.version();
-                                        const basePtr = getStartAddr() + virtRow.index * 4;
+                                        const basePtr = TEXT_BASE + virtRow.index * 4;
                                         let inst = props.disassemble ? props.disassemble(basePtr) : "";
                                         return inst;
                                     })()}
