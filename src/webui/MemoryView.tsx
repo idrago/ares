@@ -11,6 +11,8 @@ export const MemoryView: Component<{ version: () => any, writeAddr: number, writ
     let parentRef: HTMLDivElement | undefined;
     let dummyChar: HTMLDivElement | undefined;
 
+    // same version hack, but for tab switch
+    const [reloadTrigger, setReloadTrigger] = createSignal(0);
     const [containerWidth, setContainerWidth] = createSignal<number>(0);
     const [charWidth, setCharWidth] = createSignal<number>(0);
     const [chunksPerLine, setChunksPerLine] = createSignal<number>(1);
@@ -73,7 +75,7 @@ export const MemoryView: Component<{ version: () => any, writeAddr: number, writ
 
     const [activeTab, setActiveTab] = createSignal(".text");
 
-    // Auto-scroll to bottom when switching to stack tab
+    // auto-scroll to bottom when switching to stack tab
     createEffect(() => {
         if (parentRef) {
             if (activeTab() == "stack") {
@@ -85,6 +87,12 @@ export const MemoryView: Component<{ version: () => any, writeAddr: number, writ
                 rowVirtualizer2.scrollToIndex(0);
             }
         }
+    });
+
+    // force a view reload on tab switches
+    createEffect(() => {
+        activeTab();
+        setReloadTrigger(prev => prev + 1);
     });
 
     const getStartAddr = () => {
@@ -167,6 +175,7 @@ export const MemoryView: Component<{ version: () => any, writeAddr: number, writ
 
                                     {(() => {
                                         props.version();
+                                        reloadTrigger();
                                         displayFormat();
                                         let chunks = chunksPerLine() - 1;
                                         if (chunks < 1) chunks = 1;

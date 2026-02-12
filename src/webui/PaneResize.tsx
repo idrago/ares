@@ -8,74 +8,54 @@ export const PaneResize: Component<{
     children: [() => JSX.Element, (data: any) => JSX.Element]
 }> = (props) => {
 
-    let handle: HTMLDivElement | undefined;
-    let container: HTMLDivElement | undefined;
+    let handle: HTMLDivElement;
+    let container: HTMLDivElement;
 
     const [size, setSize] = createSignal<number>(0);
     const [containerSize, setContainerSize] = createSignal<number>(0);
+    const [resizeState, setResizeState] = createSignal<{ origSize: number; orig: number } | null>(null);
 
-    const [resizeState, setResizeState] = createSignal<{
-        origSize: number;
-        orig: number;
-    } | null>(null);
-
-    const resizeUp = (e: MouseEvent | TouchEvent) => {
-        setResizeState(null);
-        document.body.style.pointerEvents = "";
-        document.body.style.userSelect = "";
-        handle!.style.pointerEvents = "";
-    };
+    const resizeUp = () => setResizeState(null);
 
     const resizeDown = (e: MouseEvent | TouchEvent) => {
         e.preventDefault();
-        document.body.style.pointerEvents = "none";
-        document.body.style.userSelect = "none";
-        handle!.style.pointerEvents = "auto";
-        const client =
-            props.direction == "vertical"
-                ? (e as MouseEvent).clientY ?? (e as TouchEvent).touches[0]?.clientY
-                : (e as MouseEvent).clientX ?? (e as TouchEvent).touches[0]?.clientX;
+        const client = e instanceof MouseEvent
+            ? (props.direction === "vertical" ? e.clientY : e.clientX)
+            : (props.direction === "vertical" ? e.touches[0].clientY : e.touches[0].clientX);
         setResizeState({ origSize: size(), orig: client });
     };
 
     const resizeMove = (e: MouseEvent | TouchEvent) => {
-        if (resizeState() === null) return;
-        const client =
-            props.direction == "vertical"
-                ? (e as MouseEvent).clientY ?? (e as TouchEvent).touches[0]?.clientY
-                : (e as MouseEvent).clientX ?? (e as TouchEvent).touches[0]?.clientX;
+        if (!resizeState()) return;
+        const client = e instanceof MouseEvent
+            ? (props.direction === "vertical" ? e.clientY : e.clientX)
+            : (props.direction === "vertical" ? e.touches[0].clientY : e.touches[0].clientX);
+
         const calcSize = resizeState()!.origSize + (client - resizeState()!.orig);
-        const dim = props.direction == "vertical"
-            ? container!.clientHeight
-            : container!.clientWidth;
+        const dim = props.direction === "vertical" ? container.clientHeight : container.clientWidth;
         setSize(Math.max(0, Math.min(calcSize, dim - 4)));
     };
 
     const updateSize = () => {
-        const newSize =
-            props.direction == "vertical"
-                ? container!.clientHeight
-                : container!.clientWidth;
-        if (newSize === 0) return;
+        const newSize = props.direction === "vertical" ? container.clientHeight : container.clientWidth;
+        if (!newSize) return;
         setSize((size() / containerSize()) * newSize);
         setContainerSize(newSize);
     };
 
     onMount(() => {
-        const initialSize =
-            props.direction == "vertical"
-                ? container!.clientHeight
-                : container!.clientWidth;
-        setSize(initialSize * props.firstSize);
+        const initialSize = props.direction === "vertical" ? container.clientHeight : container.clientWidth;
         setContainerSize(initialSize);
+        setSize(initialSize * props.firstSize);
 
-        const ro = new ResizeObserver(() => updateSize());
-        ro.observe(container!);
+        const ro = new ResizeObserver(updateSize);
+        ro.observe(container);
 
         document.addEventListener("mousemove", resizeMove);
         document.addEventListener("touchmove", resizeMove);
         document.addEventListener("mouseup", resizeUp);
         document.addEventListener("touchend", resizeUp);
+
         onCleanup(() => {
             ro.disconnect();
             document.removeEventListener("mousemove", resizeMove);
@@ -89,20 +69,20 @@ export const PaneResize: Component<{
         <div
             class="flex w-full h-full max-h-full max-w-full theme-fg theme-bg"
             style={{ contain: "strict" }}
-            ref={container}
+            ref={el => container = el}
             classList={{
-                "flex-col": props.direction == "vertical",
-                "flex-row": props.direction == "horizontal",
+                "flex-col": props.direction === "vertical",
+                "flex-row": props.direction === "horizontal",
             }}
         >
             <div
                 class="theme-bg theme-fg flex-shrink overflow-hidden"
                 style={{
                     contain: "strict",
-                    height: props.direction == "vertical" ? `${!props.second ? containerSize() : size()}px` : "auto",
-                    "min-height": props.direction == "vertical" ? `${!props.second ? containerSize() : size()}px` : "auto",
-                    width: props.direction == "horizontal" ? `${!props.second ? containerSize() : size()}px` : "auto",
-                    "min-width": props.direction == "horizontal" ? `${!props.second ? containerSize() : size()}px` : "auto",
+                    height: props.direction === "vertical" ? `${props.second ? size() : containerSize()}px` : "auto",
+                    "min-height": props.direction === "vertical" ? `${props.second ? size() : containerSize()}px` : "auto",
+                    width: props.direction === "horizontal" ? `${props.second ? size() : containerSize()}px` : "auto",
+                    "min-width": props.direction === "horizontal" ? `${props.second ? size() : containerSize()}px` : "auto",
                 }}
             >
                 {props.children[0]()}
@@ -110,12 +90,12 @@ export const PaneResize: Component<{
             <div
                 on:mousedown={resizeDown}
                 on:touchstart={resizeDown}
-                ref={handle}
-                style={{ "flex-shrink": 0 }}
+                ref={el => handle = el}
+                style={{ "flex-shrink": 0, cursor: props.direction === "vertical" ? "ns-resize" : "ew-resize" }}
                 class={
-                    !props.second ? "hidden" : (props.direction == "vertical"
-                        ? "w-full h-[4px] theme-separator cursor-row-resize"
-                        : "h-full w-[4px] theme-separator cursor-col-resize")
+                    !props.second ? "hidden" : (props.direction === "vertical"
+                        ? "w-full h-[4px] theme-separator"
+                        : "h-full w-[4px] theme-separator")
                 }
             ></div>
             <div style={{ contain: "strict" }} class={!props.second ? "hidden" : "theme-bg theme-fg flex-grow flex-shrink overflow-hidden"}>
@@ -123,4 +103,4 @@ export const PaneResize: Component<{
             </div>
         </div>
     );
-}
+};
