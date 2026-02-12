@@ -101,7 +101,7 @@ RegisterExpression {
       "beq" | "bne" | "blt" | "bge" | "bltu" | "bgeu" | "bgt" | "ble" | "bgtu" | "bleu" |
       "beqz" | "bnez" | "blez" | "bgez" | "bltz" | "bgtz" |
       "mv" | "not" | "neg" | "seqz" | "snez" | "sltz" | "sgtz" |
-      "j" | "jal" |
+      "j" | "jal" | "call" | "nop" |
       "jr" | "jalr" |
       "ret" |
       "lui" | "auipc" |

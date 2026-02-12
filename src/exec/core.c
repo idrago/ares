@@ -778,7 +778,7 @@ const char *handle_jump(Parser *p, const char *opcode, size_t opcode_len) {
 
     skip_whitespace(p);
     // jal optionally takes a register argument
-    if (str_eq_case(opcode, opcode_len, "jal")) {
+    if (str_eq_case(opcode, opcode_len, "jal") || str_eq_case(opcode, opcode_len, "call")) {
         if ((d = parse_reg(p)) == -1) err = "Invalid rd";
         skip_whitespace(p);
         if (consume_if(p, ',')) {
@@ -940,6 +940,11 @@ const char *handle_ebreak(Parser *p, const char *opcode, size_t opcode_len) {
     return NULL;
 }
 
+const char *handle_nop(Parser *p, const char *opcode, size_t opcode_len) {
+    asm_emit(ADDI(0, 0, 0), p->startline);
+    return NULL;
+}
+
 const char *handle_sret(Parser *p, const char *opcode, size_t opcode_len) {
     asm_emit(0x10200073, p->startline);
     return NULL;
@@ -1021,7 +1026,7 @@ OpcodeHandling opcode_types[] = {
       "bleu"}},
     {handle_branch_zero, {"beqz", "bnez", "blez", "bgez", "bltz", "bgtz"}},
     {handle_alu_pseudo, {"mv", "not", "neg", "seqz", "snez", "sltz", "sgtz"}},
-    {handle_jump, {"j", "jal"}},
+    {handle_jump, {"j", "jal", "call"}},
     {handle_jump_reg, {"jr", "jalr"}},
     {handle_ret, {"ret"}},
     {handle_upper, {"lui", "auipc"}},
@@ -1029,6 +1034,7 @@ OpcodeHandling opcode_types[] = {
     {handle_la, {"la"}},
     {handle_ecall, {"ecall"}},
     {handle_ebreak, {"ebreak"}},
+    {handle_nop, {"nop"}},
     {handle_csr, {"csrrw", "csrrs", "csrrc"}},
     {handle_csr_imm, {"csrrwi", "csrrsi", "csrrci"}},
     {handle_sret, {"sret"}},
