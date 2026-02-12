@@ -234,7 +234,7 @@ export class WasmInterface {
       let str = "";
       switch (errorType) {
         case 1:
-          this.textBuffer += `ERROR: Program counter moved outside valid code (PC=${pcString})\n`;
+          this.textBuffer += `ERROR: Program counter moved outside valid code (${pcString})\n`;
           if (this.shadowStackLen[0] == 0) this.textBuffer += "Hint: The program may be missing an exit syscall\n";
           else this.textBuffer += "Hint: This may be caused by a bad jump address or a missing return instruction\n";
           break;
