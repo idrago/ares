@@ -421,9 +421,10 @@ export function reverseStep(_runtime: DebugState, setRuntime: SetStoreFunction<R
 // in accordance to CodeMirror, 0 = invalid line (PC out of the file)
 export function getCurrentLine(_runtime: DebugState | ErrorState): number {
 	let linenoIdx = (_runtime.pc - TEXT_BASE) / 4;
-	// FIXME: make safe
-	if (linenoIdx < wasmInterface.textByLinenumLen![0])
+	// FIXME: make type-safe
+	if (linenoIdx < wasmInterface.textByLinenumLen![0]) {
 		return wasmInterface.textByLinenum![linenoIdx];
+	}
 	return 0;
 }
 

@@ -234,7 +234,9 @@ export class WasmInterface {
       let str = "";
       switch (errorType) {
         case 1:
-          this.textBuffer += `ERROR: cannot fetch instruction from ${pcString}\n`;
+          this.textBuffer += `ERROR: Program counter moved outside valid code (PC=${pcString})\n`;
+          if (this.shadowStackLen[0] == 0) this.textBuffer += "Hint: The program may be missing an exit syscall\n";
+          else this.textBuffer += "Hint: This may be caused by a bad jump address or a missing return instruction\n";
           break;
         case 2:
           str = convertNumber(runtimeParam1, false);

@@ -379,7 +379,27 @@ addi x0, x0, 3 \n\
     TEST_ASSERT_EQUAL_INT(g_text_by_linenum.buf[0], 1);
     TEST_ASSERT_EQUAL_INT(g_text_by_linenum.buf[1], 2);
     TEST_ASSERT_EQUAL_INT(g_text_by_linenum.buf[2], 4);
+    TEST_ASSERT_EQUAL_INT(g_text_by_linenum.len, 3);
 }
+
+void test_linenum_2(void) {
+    assemble_line("\
+.globl _start\n\
+.data\n\
+    num1: .word 5\n\
+    num2: .word 6\n\
+.text\n\
+_start:\n\
+    jal foo\n\
+foo:\n\
+    la    a0, num1\n\
+    la    a1, num2\n\
+    lw    a0, 0(a0)\n\
+    lw    a1, 0(a1)\n\
+");
+    TEST_ASSERT_EQUAL_INT(g_text_by_linenum.len, 7);
+}
+
 
 // -- runtime tests
 

@@ -402,7 +402,7 @@ void asm_emit_byte(u8 byte, int linenum) {
 }
 
 void asm_emit(u32 inst, int linenum) {
-    if (g_section == g_text) {
+    if (g_section == g_text && !g_in_fixup) {
         *ARES_ARRAY_PUSH(&g_text_by_linenum) = linenum;
     }
 
