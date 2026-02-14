@@ -5,16 +5,22 @@ export const TabSelector: Component<{
     setTab: (newTab: string) => void;
     tabs: string[];
 }> = (props) => {
-    return <div class="w-full">
-        <div class="w-full flex flex-wrap justify-stretch theme-bg theme-fg">
-            {props.tabs.map((currTab) => (
-                <button
-                    class={`grow text-center px-2 font-semibold ${props.tab == currTab ? "border-b-2 theme-bg theme-fg" : "border-b-1 theme-fg2"}`}
-                    onClick={() => props.setTab(currTab)}
-                >
-                    {currTab}
-                </button>
-            ))}
+    return (
+        <div class="w-full theme-gutter border-b theme-border">
+            <div class="flex gap-1 px-2 py-1">
+                {props.tabs.map((currTab) => (
+                    <button
+                        class={`px-3 py-1 text-sm font-medium rounded-t transition-colors ${
+                            props.tab === currTab 
+                                ? "theme-bg theme-fg border-l border-r border-t theme-border" 
+                                : "theme-fg2"
+                        }`}
+                        onClick={() => props.setTab(currTab)}
+                    >
+                        {currTab}
+                    </button>
+                ))}
+            </div>
         </div>
-    </div>;
+    );
 }
