@@ -40,10 +40,10 @@ export const RegisterTable: Component<{ pc: number, regs: number[], regWritten: 
   // now i have the precise size in a font-independent format, as long as it's monospace
   return (
     <div class="overflow-hidden flex-grow h-full self-start flex-shrink flex flex-col" style={{contain: "strict"}}>
-      <div class="flex-none flex items-center justify-end theme-gutter border-b theme-border px-2 py-2.5">
+      <div class="flex-none flex items-center justify-end theme-gutter border-b theme-border h-8">
         <div class="flex items-center gap-1">
           <select
-            class="text-xs font-semibold theme-fg theme-gutter px-2 rounded theme-border focus:outline-none cursor-pointer"
+            class="font-semibold theme-fg theme-gutter px-2 rounded theme-border focus:outline-none cursor-pointer"
             title="Memory unit size"
             value={unitSize()}
             onChange={(e) => setUnitSize(e.currentTarget.value as UnitSize)}
@@ -53,7 +53,7 @@ export const RegisterTable: Component<{ pc: number, regs: number[], regWritten: 
             <option value="word">word</option>
           </select>
           <select
-            class="text-xs font-semibold theme-fg theme-gutter px-2 rounded theme-border focus:outline-none cursor-pointer"
+            class="font-semibold theme-fg theme-gutter px-2 rounded theme-border focus:outline-none cursor-pointer"
             title="Number format"
             value={displayFormat()}
             onChange={(e) => setDisplayFormat(e.currentTarget.value as DisplayFormat)}

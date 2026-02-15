@@ -5,8 +5,8 @@ import { doChangeTheme } from "./Theme";
 
 export const EditorToolbar: Component<{ textGetter: () => string }> = (props) => {
     return (
-        <div class="flex-none flex items-center h-7 px-2 theme-gutter">
-            <h1 class="select-none text-lg font-bold theme-fg tracking-wide mr-3">ARES</h1>
+        <div class="flex-none flex theme-gutter border-b theme-border h-8 pr-1">
+            <h1 class="select-none text-lg font-bold theme-fg tracking-wide ml-2 mr-3">ARES</h1>
 
             <div class="flex-grow"></div>
 
@@ -62,7 +62,6 @@ export const EditorToolbar: Component<{ textGetter: () => string }> = (props) =>
                     />
                 </Show>
                     
-                <div class="w-px h-5 theme-separator mx-1"></div>
                     
                 <ToolbarBtn
                     icon="dark_mode"

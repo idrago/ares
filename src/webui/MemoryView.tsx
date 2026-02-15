@@ -108,14 +108,9 @@ export const MemoryView: Component<{ version: () => any, writeAddr: number, writ
 
             {/* Table Headers */}
             <Show when={activeTab() != "frames"}>
-                <div class="theme-gutter border-b theme-border px-5 py-1 font-mono text-sm font-semibold theme-fg2 flex-shrink-0">
-                    <span class="inline-block w-[12ch] theme-border pr-2">Address</span>
-                    <Show when={activeTab() == "disasm"}>
-                        <span class="ml-2">Instruction</span>
-                    </Show>
-                    <Show when={activeTab() != "disasm"}>
-                        <span class="ml-2">Data</span>
-                    </Show>
+                <div class="font-mono ml-2 theme-fg2">
+                    <a class="inline-block" style={{ width: charWidth() * 10 + "px"}}>addr</a>
+                    <a>{activeTab() == "disasm" ? "instructions" : "data"}</a>
                 </div>
             </Show>
 
@@ -154,7 +149,7 @@ export const MemoryView: Component<{ version: () => any, writeAddr: number, writ
                                     class={"flex flex-row items-center w-full " + (props.version() && (TEXT_BASE + virtRow.index * 4 == props.pc) ? "cm-debugging" : "")}
                                 >
                                     <div
-                                        class={"shrink-0 w-[10ch] tabular-nums border-r mr-2 theme-border pr-2 " + ((addrSelect() == virtRow.index) ? "select-text " : "select-none ") + ((TEXT_BASE + virtRow.index * 4 == props.pc) ? "theme-fg" : "theme-fg2")}
+                                        class={"shrink-0 w-[10ch] tabular-nums " + ((addrSelect() == virtRow.index) ? "select-text " : "select-none ") + ((TEXT_BASE + virtRow.index * 4 == props.pc) ? "theme-fg" : "theme-fg2")}
                                         onMouseDown={(e) => { setAddrSelect(virtRow.index); e.stopPropagation(); }}>
                                         {(TEXT_BASE + virtRow.index * 4).toString(16).padStart(8, "0")}
                                     </div>
@@ -181,7 +176,7 @@ export const MemoryView: Component<{ version: () => any, writeAddr: number, writ
                                 >
                                     {/* Address Column */}
                                     <div
-                                        class={"theme-fg2 shrink-0 w-[10ch] tabular-nums border-r mr-2 theme-border pr-2 " + ((addrSelect() == virtRow.index) ? "select-text" : "select-none")}
+                                        class={"theme-fg2 shrink-0 w-[10ch] tabular-nums " + ((addrSelect() == virtRow.index) ? "select-text" : "select-none")}
                                         onMouseDown={(e) => { setAddrSelect(virtRow.index); e.stopPropagation(); }}>
                                         {(getStartAddr() + virtRow.index * (chunksPerLine() - 1) * 4).toString(16).padStart(8, "0")}
                                     </div>

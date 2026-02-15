@@ -6,7 +6,7 @@ export const TabSelector: Component<{
     tabs: string[];
 }> = (props) => {
     return (
-        <div class="w-full border-b theme-border">
+        <div class="flex-none flex theme-gutter border-b theme-border h-8">
             <div class="flex">
                 {props.tabs.map((currTab) => (
                     <button
