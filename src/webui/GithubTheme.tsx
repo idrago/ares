@@ -12,6 +12,7 @@ import { Extension } from "@codemirror/state";
 export interface Colors {
     base0: string;
     base1: string;
+    base1a: string;
     base2: string;
     base3: string;
     base4: string;
@@ -38,6 +39,7 @@ export interface Theme {
 const darkColors: Colors = {
     base0: "#0d1117",
     base1: "#161b22",
+    base1a: "#38363f",
     base2: "#444d56",
     base3: "#89929b",
     base4: "#c6cdd5",
@@ -59,6 +61,7 @@ const darkColors: Colors = {
 const lightColors = {
     base0: "#fefefe",
     base1: "#f6f8fa",
+    base1a: "#ebeef1",
     base2: "#d1d5da",
     base3: "#959da5",
     base4: "#586069",

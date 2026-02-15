@@ -6,14 +6,14 @@ export const TabSelector: Component<{
     tabs: string[];
 }> = (props) => {
     return (
-        <div class="w-full theme-gutter border-b theme-border">
-            <div class="flex gap-1 px-2 py-1">
+        <div class="w-full border-b theme-border">
+            <div class="flex">
                 {props.tabs.map((currTab) => (
                     <button
-                        class={`px-3 py-1 text-sm font-medium rounded-t transition-colors ${
+                        class={`px-2 pb-0.5 font-semibold ${
                             props.tab === currTab 
-                                ? "theme-bg theme-fg border-l border-r border-t theme-border" 
-                                : "theme-fg2"
+                                ? "theme-fg theme-tab theme-fg border-t-2 theme-border-strong" 
+                                : "theme-fg2 border-t-2 border-transparent "
                         }`}
                         onClick={() => props.setTab(currTab)}
                     >

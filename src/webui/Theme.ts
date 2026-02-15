@@ -47,6 +47,12 @@ function updateCss(colors: Colors): void {
 .theme-border {
 	border-color: ${colors.base2};
 }
+.theme-tab {
+	background-color: ${colors.base1a};
+}
+.theme-border-strong {
+	border-color: ${colors.base3};
+}
 .sp-highlight {
 	background-color: ${colors.bggreen};
 }
