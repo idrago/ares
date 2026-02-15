@@ -7,8 +7,8 @@ import { wasmInterface } from ".";
 import { BacktraceView } from "./BacktraceView";
 import { Editor, EditorInterface } from "./Editor";
 import { consoleText, continueStep, doBuildForLinter, getCurrentLine, initialRegs, nextStep, quitDebug, reverseStep, runNormal, runTestSuite, setBreakpointLines, setWasmRuntime, singleStep, startStep, testData, TEXT_BASE, wasmRuntime, wasmTestsuite, wasmTestsuiteIdx } from "./EmulatorState";
+import { EditorToolbar } from "./EditorToolbar";
 import { MemoryView } from "./MemoryView";
-import { Navbar } from "./Navbar";
 import { PaneResize } from "./PaneResize";
 import { RegisterTable } from "./RegisterTable";
 import { TestSuiteViewer } from "./TestSuite";
@@ -67,50 +67,54 @@ const App: Component = () => {
 		});
 	});
 	return (
-		<div class="fullsize flex flex-col justify-between overflow-hidden">
-			<Navbar textGetter={editorInterface.getText} />
-			<div class="grow flex overflow-hidden">
-				<PaneResize firstSize={0.5} direction="horizontal" second={true}>
-					{() =>
-						<PaneResize firstSize={0.65} direction="vertical"
-							second={wasmTestsuite().length > 0}>
-							{() => <PaneResize firstSize={0.85} direction="vertical"
-								second={((wasmRuntime && (wasmRuntime.status == "debug" || wasmRuntime.status == "error")) && wasmRuntime.shadowStack.length > 0) ? wasmRuntime : null}>
-								{() => <Editor origText={origText} storeText={text => localStorage.setItem(localStorageKey, text)} asmLinterOn={wasmRuntime.status != "debug" && wasmRuntime.status != "error"}
-									highlightedLine={(wasmRuntime.status == "debug" || wasmRuntime.status == "error") ? getCurrentLine(wasmRuntime) : undefined}
-									editorInterfaceRef={editorInterface} setBreakpoints={setBreakpointLines}
-									diagnostics={wasmRuntime.status == "asmerr" ? { line: wasmRuntime.line, message: wasmRuntime.message } : undefined}
-									doBuild={(s) => doBuildForLinter(wasmRuntime, setWasmRuntime, s)}
-									theme={currentTheme()}
-								/>}
-								{wasmRuntime => BacktraceView(wasmRuntime)}
-							</PaneResize>}
-							{() => <TestSuiteViewer table={wasmTestsuite()} currentDebuggingEntry={wasmTestsuiteIdx()} textGetter={editorInterface.getText} />}
-						</PaneResize>
-					}
+		<div class="fullsize flex flex-row overflow-hidden">
+			{/* ===== LEFT: Editor + Toolbar ===== */}
+			<PaneResize firstSize={0.5} direction="horizontal" second={true}>
+				{() =>
+					<div class="flex flex-col h-full w-full">
+						<EditorToolbar textGetter={editorInterface.getText} />
+						<div class="flex-grow overflow-hidden">
+							<PaneResize firstSize={0.65} direction="vertical"
+								second={wasmTestsuite().length > 0}>
+								{() => <PaneResize firstSize={0.85} direction="vertical"
+									second={((wasmRuntime && (wasmRuntime.status == "debug" || wasmRuntime.status == "error")) && wasmRuntime.shadowStack.length > 0) ? wasmRuntime : null}>
+									{() => <Editor origText={origText} storeText={text => localStorage.setItem(localStorageKey, text)} asmLinterOn={wasmRuntime.status != "debug" && wasmRuntime.status != "error"}
+										highlightedLine={(wasmRuntime.status == "debug" || wasmRuntime.status == "error") ? getCurrentLine(wasmRuntime) : undefined}
+										editorInterfaceRef={editorInterface} setBreakpoints={setBreakpointLines}
+										diagnostics={wasmRuntime.status == "asmerr" ? { line: wasmRuntime.line, message: wasmRuntime.message } : undefined}
+										doBuild={(s) => doBuildForLinter(wasmRuntime, setWasmRuntime, s)}
+										theme={currentTheme()}
+									/>}
+									{wasmRuntime => BacktraceView(wasmRuntime)}
+								</PaneResize>}
+								{() => <TestSuiteViewer table={wasmTestsuite()} currentDebuggingEntry={wasmTestsuiteIdx()} textGetter={editorInterface.getText} />}
+							</PaneResize>
+						</div>
+					</div>
+				}
 
-					{() => <PaneResize firstSize={0.75} direction="vertical" second={true}>
-						{() => <PaneResize firstSize={0.55} direction="horizontal" second={true}>
-							{() => <MemoryView version={() => wasmRuntime.version}
-								writeAddr={wasmRuntime.status == "debug" ? wasmRuntime.memWrittenAddr : 0}
-								writeLen={wasmRuntime.status == "debug" ? wasmRuntime.memWrittenLen : 0}
-								sp={wasmInterface.regsArr[2 - 1]}
-								fp={wasmInterface.regsArr[8 - 1]}
-								pc={wasmRuntime.status == "debug" ? wasmInterface.pc[0] : 0}
-								load={wasmInterface.emu_load}
-								disassemble={(pc) => wasmInterface.disassemble(pc)}
-							/>}
-							{() => <RegisterTable pc={(wasmRuntime.status == "idle" || wasmRuntime.status == "asmerr" || wasmRuntime.status == "testsuite") ? TEXT_BASE : wasmRuntime.pc}
-								regs={(wasmRuntime.status == "idle" || wasmRuntime.status == "asmerr" || wasmRuntime.status == "testsuite") ? initialRegs : wasmRuntime.regs}
-								regWritten={wasmInterface.regWritten ? wasmInterface.regWritten[0] : 0} />}
-						</PaneResize>}
-						{() => (<div
-							innerText={consoleText(wasmRuntime) ? consoleText(wasmRuntime) : "Console output will go here..."}
-							class={"w-full h-full font-mono text-md overflow-auto theme-scrollbar theme-bg " + (consoleText(wasmRuntime) ? "theme-fg" : "theme-fg2")}
-						></div>)}
+				{/* ===== RIGHT: Memory + Registers + Console ===== */}
+				{() => <PaneResize firstSize={0.75} direction="vertical" second={true}>
+					{() => <PaneResize firstSize={0.55} direction="horizontal" second={true}>
+						{() => <MemoryView version={() => wasmRuntime.version}
+							writeAddr={wasmRuntime.status == "debug" ? wasmRuntime.memWrittenAddr : 0}
+							writeLen={wasmRuntime.status == "debug" ? wasmRuntime.memWrittenLen : 0}
+							sp={wasmInterface.regsArr[2 - 1]}
+							fp={wasmInterface.regsArr[8 - 1]}
+							pc={wasmRuntime.status == "debug" ? wasmInterface.pc[0] : 0}
+							load={wasmInterface.emu_load}
+							disassemble={(pc) => wasmInterface.disassemble(pc)}
+						/>}
+						{() => <RegisterTable pc={(wasmRuntime.status == "idle" || wasmRuntime.status == "asmerr" || wasmRuntime.status == "testsuite") ? TEXT_BASE : wasmRuntime.pc}
+							regs={(wasmRuntime.status == "idle" || wasmRuntime.status == "asmerr" || wasmRuntime.status == "testsuite") ? initialRegs : wasmRuntime.regs}
+							regWritten={wasmInterface.regWritten ? wasmInterface.regWritten[0] : 0} />}
 					</PaneResize>}
-				</PaneResize>
-			</div>
+					{() => (<div
+						innerText={consoleText(wasmRuntime) ? consoleText(wasmRuntime) : "Console output will go here..."}
+						class={"w-full h-full font-mono text-md overflow-auto theme-scrollbar theme-bg " + (consoleText(wasmRuntime) ? "theme-fg" : "theme-fg2")}
+					></div>)}
+				</PaneResize>}
+			</PaneResize>
 		</div>
 	);
 };
