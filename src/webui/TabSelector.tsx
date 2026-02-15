@@ -6,8 +6,8 @@ export const TabSelector: Component<{
     tabs: string[];
 }> = (props) => {
     return (
-        <div class="flex-none flex theme-gutter border-b theme-border h-8">
-            <div class="flex">
+        <div class="flex-none flex theme-gutter border-b theme-border h-9">
+            <div class="flex ml-2">
                 {props.tabs.map((currTab) => (
                     <button
                         class={`px-2 pb-0.5 font-semibold ${

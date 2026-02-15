@@ -5,8 +5,12 @@ import { doChangeTheme } from "./Theme";
 
 export const EditorToolbar: Component<{ textGetter: () => string }> = (props) => {
     return (
-        <div class="flex-none flex theme-gutter border-b theme-border h-8 pr-1">
-            <h1 class="select-none text-lg font-bold theme-fg tracking-wide ml-2 mr-3">ARES</h1>
+        <div class="flex-none flex theme-gutter border-b theme-border h-9 pr-1">
+            <h1 class="select-none text-lg font-bold theme-fg tracking-wide ml-2 mr-3 flex content-center" style={{
+                "text-transform": "uppercase",
+                "display": "inline-block",
+                "line-height": 1,
+            }}>ARES</h1>
 
             <div class="flex-grow"></div>
 
@@ -61,8 +65,8 @@ export const EditorToolbar: Component<{ textGetter: () => string }> = (props) =>
                         onClick={() => startStep(wasmRuntime, setWasmRuntime, props.textGetter())}
                     />
                 </Show>
-                    
-                    
+
+
                 <ToolbarBtn
                     icon="dark_mode"
                     title="Change theme"

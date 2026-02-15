@@ -67,6 +67,7 @@ function updateCss(colors: Colors): void {
 }
 
 .cm-header-widget {
+	padding-bottom: 0;
 }
 
 .theme-style0 { color: ${colors.purp}; }
@@ -85,10 +86,6 @@ function updateCss(colors: Colors): void {
 .theme-style13 { color: ${colors.orange}; }
 .theme-style14 { color: ${colors.green}; }
 .theme-style15 { color: ${colors.base5}; }
-
-.cm-header-widget {
-	padding-bottom: 1rem;
-}
 
 .cm-header-widget > a {
 	background-color: ${colors.base1};

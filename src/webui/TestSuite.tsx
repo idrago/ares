@@ -15,6 +15,7 @@ class HeaderWidget extends WidgetType {
         const container = document.createElement("div");
         container.className = "cm-header-widget";
         let tdata = testData;
+        if (tdata) container.style = "padding-bottom: 1.5rem";
         let assignment = tdata ? tdata.assignment : "";
         parseFormat(assignment, container);
         return container;

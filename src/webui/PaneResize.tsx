@@ -91,13 +91,20 @@ export const PaneResize: Component<{
                 on:mousedown={resizeDown}
                 on:touchstart={resizeDown}
                 ref={el => handle = el}
-                style={{ "flex-shrink": 0, cursor: props.direction === "vertical" ? "ns-resize" : "ew-resize" }}
                 class={
-                    !props.second ? "hidden" : (props.direction === "vertical"
-                        ? "w-full h-[4px] theme-separator"
-                        : "h-full w-[4px] theme-separator")
+                    !props.second
+                        ? "hidden"
+                        : props.direction === "vertical"
+                            ? "relative w-full h-[4px] cursor-ns-resize"
+                            : "relative h-full w-[4px] cursor-ew-resize"
                 }
-            ></div>
+            >
+                <div class={
+                    props.direction === "vertical"
+                        ? "absolute top-1/2 left-0 w-full h-[2px] -translate-y-1/2 border-t theme-border"
+                        : "absolute left-1/2 top-0 h-full w-[2px] -translate-x-1/2 border-l theme-border"
+                }></div>
+            </div>
             <div style={{ contain: "strict" }} class={!props.second ? "hidden" : "theme-bg theme-fg flex-grow flex-shrink overflow-hidden"}>
                 <Show when={props.second}>{props.children[1](props.second)}</Show>
             </div>
