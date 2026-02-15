@@ -75,7 +75,7 @@ const App: Component = () => {
 						<EditorToolbar textGetter={editorInterface.getText} />
 						<div class="flex-grow overflow-hidden">
 							<PaneResize firstSize={0.65} direction="vertical"
-								second={wasmTestsuite().length > 0}>
+								second={wasmTestsuite().length > 0 ? true : null}>
 								{() => <PaneResize firstSize={0.85} direction="vertical"
 									second={((wasmRuntime && (wasmRuntime.status == "debug" || wasmRuntime.status == "error")) && wasmRuntime.shadowStack.length > 0) ? wasmRuntime : null}>
 									{() => <Editor origText={origText} storeText={text => localStorage.setItem(localStorageKey, text)} asmLinterOn={wasmRuntime.status != "debug" && wasmRuntime.status != "error"}

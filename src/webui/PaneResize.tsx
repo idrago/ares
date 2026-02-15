@@ -1,13 +1,12 @@
-import { createSignal, onMount, onCleanup, Component, Show } from "solid-js";
+import { createSignal, onMount, onCleanup, Show, createEffect } from "solid-js";
 import { JSX } from "solid-js/jsx-runtime";
 
-export const PaneResize: Component<{
-    firstSize: number,
-    direction: "vertical" | "horizontal",
-    second: any,
-    children: [() => JSX.Element, (data: any) => JSX.Element]
-}> = (props) => {
-
+export const PaneResize = <T,>(props: {
+  firstSize: number;
+  direction: "vertical" | "horizontal";
+  second: T | null;
+  children: [() => JSX.Element, (data: T) => JSX.Element];
+}) => {
     let handle: HTMLDivElement;
     let container: HTMLDivElement;
 
@@ -65,6 +64,16 @@ export const PaneResize: Component<{
         });
     });
 
+    createEffect(() => {
+        if (props.second !== null) {
+            const currentContainerSize = props.direction === "vertical" 
+                ? container?.clientHeight 
+                : container?.clientWidth;
+            if (currentContainerSize)
+                setSize(currentContainerSize * props.firstSize);
+        }
+    });
+
     return (
         <div
             class="flex w-full h-full max-h-full max-w-full theme-fg theme-bg"
@@ -79,10 +88,10 @@ export const PaneResize: Component<{
                 class="theme-bg theme-fg flex-shrink overflow-hidden"
                 style={{
                     contain: "strict",
-                    height: props.direction === "vertical" ? `${props.second ? size() : containerSize()}px` : "auto",
-                    "min-height": props.direction === "vertical" ? `${props.second ? size() : containerSize()}px` : "auto",
-                    width: props.direction === "horizontal" ? `${props.second ? size() : containerSize()}px` : "auto",
-                    "min-width": props.direction === "horizontal" ? `${props.second ? size() : containerSize()}px` : "auto",
+                    height: props.direction === "vertical" ? `${props.second !== null ? size() : containerSize()}px` : "auto",
+                    "min-height": props.direction === "vertical" ? `${props.second !== null ? size() : containerSize()}px` : "auto",
+                    width: props.direction === "horizontal" ? `${props.second !== null ? size() : containerSize()}px` : "auto",
+                    "min-width": props.direction === "horizontal" ? `${props.second !== null ? size() : containerSize()}px` : "auto",
                 }}
             >
                 {props.children[0]()}
@@ -92,7 +101,7 @@ export const PaneResize: Component<{
                 on:touchstart={resizeDown}
                 ref={el => handle = el}
                 class={
-                    !props.second
+                    props.second === null
                         ? "hidden"
                         : props.direction === "vertical"
                             ? "relative w-full h-[4px] cursor-ns-resize"
@@ -105,8 +114,8 @@ export const PaneResize: Component<{
                         : "absolute left-1/2 top-0 h-full w-[2px] -translate-x-1/2 border-l theme-border"
                 }></div>
             </div>
-            <div style={{ contain: "strict" }} class={!props.second ? "hidden" : "theme-bg theme-fg flex-grow flex-shrink overflow-hidden"}>
-                <Show when={props.second}>{props.children[1](props.second)}</Show>
+            <div style={{ contain: "strict" }} class={props.second === null ? "hidden" : "theme-bg theme-fg flex-grow flex-shrink overflow-hidden"}>
+                <Show when={props.second}>{(s) => props.children[1](s())}</Show>
             </div>
         </div>
     );
