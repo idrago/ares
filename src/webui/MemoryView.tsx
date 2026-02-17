@@ -84,7 +84,28 @@ export const MemoryView: Component<{ version: () => any, writeAddr: number, writ
             } else if (activeTab() != "disasm") {
                 rowVirtualizer.scrollToIndex(0);
             } else if (activeTab() == "disasm") {
-                rowVirtualizer2.scrollToIndex(0);
+                // scroll to current PC if debugging, otherwise top
+                if (props.pc > 0) {
+                    const idx = (props.pc - TEXT_BASE) / 4;
+                    if (idx >= 0 && idx < 65536 / 4) {
+                        rowVirtualizer2.scrollToIndex(idx, { align: "center" });
+                    } else {
+                        rowVirtualizer2.scrollToIndex(0);
+                    }
+                } else {
+                    rowVirtualizer2.scrollToIndex(0);
+                }
+            }
+        }
+    });
+
+    // auto-scroll disasm view to the current PC when stepping
+    createEffect(() => {
+        props.version(); // track version changes (steps)
+        if (activeTab() == "disasm" && props.pc > 0) {
+            const idx = (props.pc - TEXT_BASE) / 4;
+            if (idx >= 0 && idx < 65536 / 4) {
+                rowVirtualizer2.scrollToIndex(idx, { align: "center" });
             }
         }
     });

@@ -112,6 +112,13 @@ export const Editor: Component<EditorProps> = props => {
             view.dispatch({
                 effects: lineHighlightEffect.of(line),
             });
+            // scroll the editor to make the highlighted line visible
+            if (line > 0 && line <= view.state.doc.lines) {
+                const lineInfo = view.state.doc.line(line);
+                view.dispatch({
+                    effects: EditorView.scrollIntoView(lineInfo.from, { y: "center" }),
+                });
+            }
         })
         props.editorInterfaceRef.view = view;
 

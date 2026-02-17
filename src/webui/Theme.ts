@@ -111,7 +111,7 @@ function updateCss(colors: Colors): void {
 	}
 }
 .animate-fade-highlight {
-	animation: fadeHighlight 1s forwards;
+	animation: fadeHighlight 2.5s forwards;
 }
 `;
 }
