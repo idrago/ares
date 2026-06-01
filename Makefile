@@ -13,6 +13,7 @@ TEST_SRC = $(EXEC_SRC) src/test/test.c src/unity/src/unity.c
 LIBEZLD = src/exec/ezld/bin/libezld.a
 
 BIN_DIR = bin
+MOODLE_ZIP ?= ares-moodle.zip
 TARGETS = $(BIN_DIR)/ares $(BIN_DIR)/ares_afl $(BIN_DIR)/ares_libfuzzer $(BIN_DIR)/ares_test
 
 all: $(BIN_DIR)/ares
@@ -53,4 +54,9 @@ clean:
 	rm -f $(BIN_DIR)/ares $(BIN_DIR)/ares_afl $(BIN_DIR)/ares_libfuzzer $(BIN_DIR)/ares_test $(BIN_DIR)/ares_test_cov
 	cd src/exec/ezld && make clean
 
-.PHONY: clean test_coverage all
+moodle-zip:
+	VITE_MOODLE_BUILD=1 npm run build
+	rm -f $(MOODLE_ZIP)
+	cd dist && zip -r ../$(MOODLE_ZIP) .
+
+.PHONY: clean test_coverage all moodle-zip

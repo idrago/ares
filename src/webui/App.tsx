@@ -17,10 +17,11 @@ import { TEXT_BASE } from "./core/RiscV";
 import { buildForLinter, consoleText, continueExecution, nextStep, quitDebug, reverseStep, run, runTestSuite, setBreakpointLines, singleStep, startDebug, state, testSuiteIndex, testSuiteResults } from "./EmulatorStore";
 import { TestSuiteViewer } from "./TestSuite";
 import { IntegratedHelp } from "./IntegratedHelp";
+import { getTestSuiteName } from "./BuildOptions";
 
 // TODO: exporting those to access them in Theme.ts, but if i do 
 // theming with constant CSS classes i shouldn't need this anyways
-export const testsuiteName = (new URLSearchParams(window.location.search)).get('testsuite');
+export const testsuiteName = getTestSuiteName();
 export const isMac = navigator.platform.toLowerCase().includes('mac');
 export const prefixStr = isMac ? "Ctrl-Shift" : "Ctrl-Alt"
 const localStorageKey = testsuiteName ? ("savedtext-" + testsuiteName) : "savedtext";

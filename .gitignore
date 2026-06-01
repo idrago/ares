@@ -1,6 +1,7 @@
 .env
 .cache
 dist
+ares-moodle.zip
 bin
 result
 a.out

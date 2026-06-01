@@ -5,11 +5,12 @@ import App from './App';
 import { WasmInterface } from './core/RiscV';
 import { Emulator, TestData } from './core/EmulatorState';
 import wasmUrl from "./main.wasm?url";
+import { getTestSuiteName } from './BuildOptions';
 
 const root = document.getElementById('root');
 
 export async function fetchTestData(): Promise<TestData | null> {
-  const testsuiteName = new URLSearchParams(window.location.search).get("testsuite");
+  const testsuiteName = getTestSuiteName();
   if (!testsuiteName) return null;
   const [asmRes, jsonRes, txtRes] = await Promise.all([
     fetch(`${testsuiteName}.S`),

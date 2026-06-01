@@ -3,6 +3,7 @@ import { prefixStr, setIntegratedHelp, testsuiteName } from "./App";
 import { currentTheme, doChangeTheme } from "./Theme";
 import { continueExecution, nextStep, quitDebug, reverseStep, run, runTestSuite, singleStep, startDebug, state } from "./EmulatorStore";
 import { githubLight } from "./GithubTheme";
+import { moodleBuild } from "./BuildOptions";
 export const [ThemeIcon, setThemeIcon] = createSignal(getDefaultIcon())
 
 // to rebuild font.woff2, download https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,200,0,0&icon_names=arrow_forward,close,dark_mode,folder_open,help,night_sight_auto,play_circle,resume,save,step_into,step_over,stop,sunny,undo
@@ -38,12 +39,14 @@ export const EditorToolbar: Component<{ textGetter: () => string, setText: (s: s
                         class="theme-bg"
                         icon="save"
                         title="Save"
+                        disabled={moodleBuild}
                         onClick={() => doSave(props.textGetter())} />
 
                     <ToolbarBtn
                         class="theme-bg"
                         icon="folder_open"
                         title="Open file"
+                        disabled={moodleBuild}
                         onClick={() => doOpen(props.setText)} />
 
                     <div class="w-px h-5 theme-separator mx-1"></div>
@@ -159,10 +162,11 @@ function getDefaultIcon(): string {
     return currentTheme() == githubLight ? "sunny" : "dark_mode";
 }
 
-const ToolbarBtn: Component<{ class: string, icon: string; title: string; onClick: () => void }> = (props) => (
+const ToolbarBtn: Component<{ class: string, icon: string; title: string; disabled?: boolean; onClick: () => void }> = (props) => (
     <button
         on:click={props.onClick}
-        class={props.class + " cursor-pointer flex items-center justify-center w-7 h-7 material-symbols-outlined theme-bg-hover theme-bg-active"}
+        disabled={props.disabled}
+        class={props.class + (props.disabled ? " cursor-not-allowed opacity-40" : " cursor-pointer theme-bg-hover theme-bg-active") + " flex items-center justify-center w-7 h-7 material-symbols-outlined"}
         style={{ "font-size": "26px" }}
         title={props.title}
     >
