@@ -1,0 +1,18 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ares
+  namespace: ares
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: archelab.idrago.org
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: ares
+                port:
+                  number: 80

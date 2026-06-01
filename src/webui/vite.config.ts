@@ -25,7 +25,7 @@ function wasmPrefetchPlugin(): Plugin {
         {
           tag: 'script',
           attrs: {},
-          children: `window.__wasmFetch = fetch('/${wasmFileName}');`,
+          children: `window.__wasmFetch = fetch('./${wasmFileName}');`,
           injectTo: 'head-prepend'
         }
       ];
@@ -35,6 +35,7 @@ function wasmPrefetchPlugin(): Plugin {
 
 export default defineConfig({
   root: 'src/webui',
+  base: './',
   plugins: [wasmPrefetchPlugin(), solidPlugin(), clangPlugin(), lezer()],
   server: {
     port: 3000,

@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ares
+  namespace: ares
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ares
+  template:
+    metadata:
+      labels:
+        app: ares
+    spec:
+      containers:
+        - name: ares
+          image: mc1-bigdata.polito.it:5001/polismartdata/ares:latest 
+          ports:
+            - containerPort: 80
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 30
